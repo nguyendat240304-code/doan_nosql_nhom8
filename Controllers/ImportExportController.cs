@@ -90,6 +90,34 @@ public class ImportExportController : ControllerBase
         if (students is null || students.Count == 0)
             return BadRequest("File không chứa sinh viên.");
 
+        // Fallback tự động nhận diện mã sinh viên từ các trường JSON: _id, Id, id, MSSV, MaSV
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.ValueKind == JsonValueKind.Array)
+            {
+                var elements = doc.RootElement.EnumerateArray().ToList();
+                for (int i = 0; i < Math.Min(elements.Count, students.Count); i++)
+                {
+                    if (string.IsNullOrWhiteSpace(students[i].Id))
+                    {
+                        var el = elements[i];
+                        if (el.TryGetProperty("_id", out var id1) && id1.ValueKind == JsonValueKind.String)
+                            students[i].Id = id1.GetString()!;
+                        else if (el.TryGetProperty("Id", out var id2) && id2.ValueKind == JsonValueKind.String)
+                            students[i].Id = id2.GetString()!;
+                        else if (el.TryGetProperty("id", out var id3) && id3.ValueKind == JsonValueKind.String)
+                            students[i].Id = id3.GetString()!;
+                        else if (el.TryGetProperty("MSSV", out var id4) && id4.ValueKind == JsonValueKind.String)
+                            students[i].Id = id4.GetString()!;
+                        else if (el.TryGetProperty("MaSV", out var id5) && id5.ValueKind == JsonValueKind.String)
+                            students[i].Id = id5.GetString()!;
+                    }
+                }
+            }
+        }
+        catch { /* Bỏ qua nếu có lỗi parse phụ */ }
+
         LopHocPhan? targetLhp = null;
         if (!string.IsNullOrWhiteSpace(maLhp))
         {

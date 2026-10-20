@@ -1,6 +1,7 @@
 [
   {
     "_id": "SV2026_TEST1",
+    "Id": "SV2026_TEST1",
     "HoTen": "Nguyễn Thành Long",
     "NgaySinh": "2003-05-15T00:00:00.000Z",
     "GioiTinh": "Nam",
@@ -41,6 +42,7 @@
   },
   {
     "_id": "SV2026_TEST2",
+    "Id": "SV2026_TEST2",
     "HoTen": "Trần Thị Mai Phương",
     "NgaySinh": "2003-08-20T00:00:00.000Z",
     "GioiTinh": "Nữ",
@@ -81,6 +83,7 @@
   },
   {
     "_id": "SV2026_TEST3",
+    "Id": "SV2026_TEST3",
     "HoTen": "Lê Hoàng Phúc",
     "NgaySinh": "2003-12-10T00:00:00.000Z",
     "GioiTinh": "Nam",

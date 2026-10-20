@@ -10,7 +10,16 @@ namespace doan_cuoiky_nosql.Models;
 public class SinhVien
 {
     [BsonId]
+    [JsonPropertyName("_id")]
     public string Id { get; set; } = null!;
+
+    [BsonIgnore]
+    [JsonPropertyName("Id")]
+    public string? IdAlias
+    {
+        get => Id;
+        set { if (string.IsNullOrWhiteSpace(Id) && !string.IsNullOrWhiteSpace(value)) Id = value; }
+    }
     public string HoTen { get; set; } = null!;
 
     [BsonSerializer(typeof(FlexibleDateTimeSerializer))]
