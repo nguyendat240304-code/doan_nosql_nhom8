@@ -1,0 +1,91 @@
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+using System;
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
+
+namespace doan_cuoiky_nosql.Models;
+
+[BsonIgnoreExtraElements]
+public class SinhVien
+{
+    [BsonId]
+    public string Id { get; set; } = null!;
+    public string HoTen { get; set; } = null!;
+
+    [BsonSerializer(typeof(FlexibleDateTimeSerializer))]
+    public DateTime? NgaySinh { get; set; }
+    public string GioiTinh { get; set; } = null!;
+    public string Email { get; set; } = null!;
+    public string DienThoai { get; set; } = null!;
+    public string KhoaHoc { get; set; } = null!;
+    public string LopSinhHoat { get; set; } = null!;
+    public string MaKhoa { get; set; } = null!;
+    public string TrangThai { get; set; } = null!;
+
+    [BsonIgnore]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool TaoTaiKhoan { get; set; }
+
+    [BsonIgnore]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? MatKhauTaiKhoan { get; set; }
+
+    [BsonIgnoreIfNull]
+    public string? TenKhoa { get; set; }
+
+    [BsonIgnoreIfNull]
+    public string? CanhBaoHocVu { get; set; }
+
+    public List<BangDiemMonHoc> BangDiem { get; set; } = new List<BangDiemMonHoc>();
+}
+
+[BsonIgnoreExtraElements]
+public class BangDiemMonHoc
+{
+    public string MaLHP { get; set; } = null!;
+    public string MaMon { get; set; } = null!;
+    public string TenMon { get; set; } = null!;
+    
+    // Theo yêu cầu mục 2, phải có SoTinChi và GiangVien nhưng dump thiếu, ta nạp thêm!
+    public int SoTinChi { get; set; }
+    public GiangVienPhuTrach GiangVien { get; set; } = new GiangVienPhuTrach();
+    
+    public string Hocky { get; set; } = null!;
+    public string NamHoc { get; set; } = null!;
+    
+    public DiemThanhPhan DiemThanhPhan { get; set; } = new DiemThanhPhan();
+    
+    public double? DiemTongKet { get; set; }
+    public string? DiemChu { get; set; } = null;
+    
+    public List<DiemCLO> DiemCLO { get; set; } = new List<DiemCLO>();
+
+    public List<LichSuSuaDiem> LichSuSuaDiem { get; set; } = new List<LichSuSuaDiem>();
+}
+
+public class LichSuSuaDiem
+{
+    [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
+    public DateTime ThoiGian { get; set; } = DateTime.UtcNow;
+    public string NguoiSua { get; set; } = string.Empty;
+    public string VaiTro { get; set; } = string.Empty;
+    public string DiemCu { get; set; } = string.Empty;
+    public string DiemMoi { get; set; } = string.Empty;
+    public string LyDoSua { get; set; } = string.Empty;
+}
+
+public class DiemThanhPhan
+{
+    public double? ChuyenCan { get; set; }
+    public double? GiuaKy { get; set; }
+    public double? ThucHanh { get; set; }
+    public double? CuoiKy { get; set; }
+}
+
+public class DiemCLO
+{
+    public string MaCLO { get; set; } = null!;
+    public double? DiemDat { get; set; }
+    public string KetQua { get; set; } = null!;
+}

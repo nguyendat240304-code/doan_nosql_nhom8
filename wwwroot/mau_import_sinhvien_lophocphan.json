@@ -1,0 +1,122 @@
+[
+  {
+    "_id": "SV2026_TEST1",
+    "HoTen": "Nguyễn Thành Long",
+    "NgaySinh": "2003-05-15T00:00:00.000Z",
+    "GioiTinh": "Nam",
+    "Email": "sv2026_test1@student.huit.edu.vn",
+    "DienThoai": "0912345671",
+    "KhoaHoc": "K14",
+    "LopSinhHoat": "14DHTH01",
+    "MaKhoa": "K01",
+    "TrangThai": "Đang học",
+    "BangDiem": [
+      {
+        "MaLHP": "LHP_MH001_HK1_2026",
+        "MaMon": "MH001",
+        "TenMon": "Cơ sở dữ liệu NoSQL",
+        "SoTinChi": 3,
+        "Hocky": "HK1",
+        "NamHoc": "2026-2027",
+        "GiangVien": {
+          "MaGV": "GV001",
+          "HoTen": "Nguyễn Văn A"
+        },
+        "DiemThanhPhan": {
+          "ChuyenCan": 9.0,
+          "GiuaKy": 8.5,
+          "ThucHanh": null,
+          "CuoiKy": 8.0
+        },
+        "DiemTongKet": 8.3,
+        "DiemChu": "B+",
+        "Dat": true,
+        "CLO": {
+          "CLO1": 8.5,
+          "CLO2": 8.0,
+          "CLO3": 8.5
+        }
+      }
+    ]
+  },
+  {
+    "_id": "SV2026_TEST2",
+    "HoTen": "Trần Thị Mai Phương",
+    "NgaySinh": "2003-08-20T00:00:00.000Z",
+    "GioiTinh": "Nữ",
+    "Email": "sv2026_test2@student.huit.edu.vn",
+    "DienThoai": "0912345672",
+    "KhoaHoc": "K14",
+    "LopSinhHoat": "14DHTH01",
+    "MaKhoa": "K01",
+    "TrangThai": "Đang học",
+    "BangDiem": [
+      {
+        "MaLHP": "LHP_MH001_HK1_2026",
+        "MaMon": "MH001",
+        "TenMon": "Cơ sở dữ liệu NoSQL",
+        "SoTinChi": 3,
+        "Hocky": "HK1",
+        "NamHoc": "2026-2027",
+        "GiangVien": {
+          "MaGV": "GV001",
+          "HoTen": "Nguyễn Văn A"
+        },
+        "DiemThanhPhan": {
+          "ChuyenCan": 10.0,
+          "GiuaKy": 9.0,
+          "ThucHanh": null,
+          "CuoiKy": 9.5
+        },
+        "DiemTongKet": 9.4,
+        "DiemChu": "A",
+        "Dat": true,
+        "CLO": {
+          "CLO1": 9.5,
+          "CLO2": 9.0,
+          "CLO3": 9.5
+        }
+      }
+    ]
+  },
+  {
+    "_id": "SV2026_TEST3",
+    "HoTen": "Lê Hoàng Phúc",
+    "NgaySinh": "2003-12-10T00:00:00.000Z",
+    "GioiTinh": "Nam",
+    "Email": "sv2026_test3@student.huit.edu.vn",
+    "DienThoai": "0912345673",
+    "KhoaHoc": "K14",
+    "LopSinhHoat": "14DHTH02",
+    "MaKhoa": "K01",
+    "TrangThai": "Đang học",
+    "BangDiem": [
+      {
+        "MaLHP": "LHP_MH001_HK1_2026",
+        "MaMon": "MH001",
+        "TenMon": "Cơ sở dữ liệu NoSQL",
+        "SoTinChi": 3,
+        "Hocky": "HK1",
+        "NamHoc": "2026-2027",
+        "GiangVien": {
+          "MaGV": "GV001",
+          "HoTen": "Nguyễn Văn A"
+        },
+        "DiemThanhPhan": {
+          "ChuyenCan": 8.0,
+          "GiuaKy": 7.0,
+          "ThucHanh": null,
+          "CuoiKy": 7.5
+        },
+        "DiemTongKet": 7.4,
+        "DiemChu": "B",
+        "Dat": true,
+        "CLO": {
+          "CLO1": 7.5,
+          "CLO2": 7.0,
+          "CLO3": 7.5
+        }
+      }
+    ]
+  }
+]

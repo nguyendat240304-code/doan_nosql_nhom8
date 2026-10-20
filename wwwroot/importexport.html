@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LMS - Import / Export theo Lớp học phần</title>
+  <link href="/lib/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="/lib/bootstrap-icons/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <link href="/css/app.css" rel="stylesheet" />
+</head>
+<body>
+<main id="page-main-content">
+  <div id="alertBox"></div>
+
+  <div class="page-header">
+    <div>
+      <h4><i class="bi bi-arrow-left-right text-primary me-2"></i>Import / Export Dữ liệu theo Lớp học phần</h4>
+      <small class="text-muted">Sao lưu, xuất và nạp danh sách sinh viên theo từng Lớp học phần bằng tệp JSON</small>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Export -->
+    <div class="col-md-6">
+      <div class="card h-100 shadow-sm border">
+        <div class="card-header bg-white py-3">
+          <span class="fw-bold text-primary fs-6"><i class="bi bi-download me-2"></i>Export Hồ sơ Sinh viên</span>
+        </div>
+        <div class="card-body">
+          <p class="text-muted small mb-3">Xuất danh sách sinh viên và bảng điểm theo Lớp học phần ra file JSON.</p>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Lọc theo lớp học phần:</label>
+            <select id="exLhp" class="form-select">
+              <option value="">Tất cả lớp học phần (Xuất toàn bộ)</option>
+            </select>
+            <div class="form-text small text-muted">Chọn một lớp học phần cụ thể để trích xuất danh sách sinh viên của lớp đó.</div>
+          </div>
+          <button class="btn btn-primary w-100 py-2 fw-semibold" onclick="exportSv()">
+            <i class="bi bi-file-earmark-arrow-down me-2"></i>Tải file JSON Export
+          </button>
+        </div>
+        <div class="card-footer bg-light border-0 py-2">
+          <small class="text-muted"><i class="bi bi-info-circle me-1"></i>File JSON xuất ra có thể dùng để lưu trữ hoặc nạp lại vào hệ thống.</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Import -->
+    <div class="col-md-6">
+      <div class="card h-100 shadow-sm border">
+        <div class="card-header bg-white py-3">
+          <span class="fw-bold text-success fs-6"><i class="bi bi-upload me-2"></i>Nhập dữ liệu Sinh viên</span>
+        </div>
+        <div class="card-body">
+          <p class="text-muted small mb-3">Tải dữ liệu từ tệp JSON. Hệ thống tự động hợp nhất bảng điểm, không làm mất các môn đã có.</p>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Lớp học phần áp dụng:</label>
+            <select id="imLhp" class="form-select">
+              <option value="">Tự động theo file JSON (Mặc định)</option>
+            </select>
+            <div class="form-text small text-muted">Nếu chọn lớp cụ thể, sinh viên trong file sẽ được tự động xếp vào lớp học phần này.</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Chọn file JSON:</label>
+            <input type="file" id="imFile" accept=".json" class="form-control" />
+          </div>
+          <div class="d-flex flex-column gap-2">
+            <button class="btn btn-success w-100 py-2 fw-semibold" onclick="importSv()">
+              <i class="bi bi-database-fill-up me-2"></i>Nhập danh sách sinh viên
+            </button>
+            <button class="btn btn-outline-secondary w-100" onclick="downloadSampleJson()">
+              <i class="bi bi-filetype-json me-2"></i>Tải file JSON mẫu (Demo Báo cáo)
+            </button>
+          </div>
+        </div>
+        <div class="card-footer bg-light border-0 py-2">
+          <small class="text-muted"><i class="bi bi-shield-check me-1 text-success"></i>Dữ liệu trùng MSSV sẽ được cập nhật/bổ sung, không bị mất môn học khác.</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hướng dẫn & Dữ liệu mẫu -->
+  <div class="card mt-4 shadow-sm border">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+      <span class="fw-bold"><i class="bi bi-question-circle me-2 text-info"></i>Cấu trúc file JSON mẫu (Dùng khi Thuyết trình & Báo cáo)</span>
+      <button class="btn btn-sm btn-outline-primary" onclick="downloadSampleJson()">
+        <i class="bi bi-download me-1"></i>Tải file mẫu (.json)
+      </button>
+    </div>
+    <div class="card-body">
+      <p class="small text-muted mb-2">Tệp JSON là một mảng các đối tượng sinh viên kèm bảng điểm học phần theo chuẩn MongoDB:</p>
+      <pre class="bg-light p-3 rounded small mb-0" style="font-size:.8rem; max-height: 280px; overflow-y: auto;">[
+  {
+    "_id": "SV2026_TEST1",
+    "HoTen": "Nguyễn Thành Long",
+    "Email": "sv2026_test1@student.huit.edu.vn",
+    "DienThoai": "0912345671",
+    "LopSinhHoat": "14DHTH01",
+    "MaKhoa": "K01",
+    "KhoaHoc": "K14",
+    "TrangThai": "Đang học",
+    "BangDiem": [
+      {
+        "MaLHP": "LHP_MH001_HK1_2026",
+        "MaMon": "MH001",
+        "TenMon": "Cơ sở dữ liệu NoSQL",
+        "SoTinChi": 3,
+        "Hocky": "HK1",
+        "NamHoc": "2026-2027",
+        "GiangVien": { "MaGV": "GV001", "HoTen": "Nguyễn Văn A" },
+        "DiemThanhPhan": { "ChuyenCan": 9.0, "GiuaKy": 8.5, "ThucHanh": null, "CuoiKy": 8.0 },
+        "DiemTongKet": 8.3,
+        "DiemChu": "B+"
+      }
+    ]
+  }
+]</pre>
+    </div>
+  </div>
+</main>
+
+<script src="/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/js/layout.js?v=20261017-eye-toggle"></script>
+<script src="/js/app.js"></script>
+<script>
+  renderLayout('importexport');
+  initImportExportPage();
+</script>
+</body>
+</html>

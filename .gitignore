@@ -1,0 +1,45 @@
+# .NET build output
+[Bb]in/
+[Oo]bj/
+[Tt]est[Rr]esults/
+artifacts/
+publish_v2/
+publish/
+
+# Executables & Binaries
+*.exe
+*.dll
+*.pdb
+*.zip
+patch_temp/
+
+# IDE and local editor state
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+secrets.json
+secrets.*.json
+appsettings.*.local.json
+
+# Logs and coverage output
+*.log
+coverage/
+coverage.*
+
+# Node tooling, if added for frontend assets
+node_modules/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+day_code_len_github_moi.ps1
