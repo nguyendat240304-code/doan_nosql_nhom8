@@ -405,7 +405,8 @@ public class SinhVienController : ControllerBase
             .Set(x => x.KhoaHoc, svIn.KhoaHoc)
             .Set(x => x.LopSinhHoat, svIn.LopSinhHoat)
             .Set(x => x.MaKhoa, svIn.MaKhoa)
-            .Set(x => x.TrangThai, svIn.TrangThai);
+            .Set(x => x.TrangThai, svIn.TrangThai)
+            .Set(x => x.LyDoTrangThai, svIn.LyDoTrangThai);
         var r = await _mongoDbService.SinhViens.UpdateOneAsync(x => x.Id == id, update);
         return r.MatchedCount > 0 ? NoContent() : NotFound();
     }

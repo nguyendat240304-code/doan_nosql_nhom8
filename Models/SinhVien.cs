@@ -32,6 +32,9 @@ public class SinhVien
     public string MaKhoa { get; set; } = null!;
     public string TrangThai { get; set; } = null!;
 
+    [BsonIgnoreIfNull]
+    public string? LyDoTrangThai { get; set; }
+
     [BsonIgnore]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool TaoTaiKhoan { get; set; }

@@ -21,6 +21,16 @@
               <select id="filterLop" class="form-select" onchange="renderSinhVienTable()">
                 <option value="">Tất cả lớp</option>
               </select>
+              <select id="filterTrangThai" class="form-select" onchange="renderSinhVienTable()" style="max-width:180px;">
+                <option value="">Tất cả trạng thái</option>
+                <option value="Đang học">Đang học</option>
+                <option value="Cảnh báo học vụ">Cảnh báo học vụ</option>
+                <option value="Bảo lưu">Bảo lưu</option>
+                <option value="Đã nghỉ">Đã nghỉ</option>
+                <option value="Buộc thôi học">Buộc thôi học</option>
+                <option value="Đình chỉ học tập">Đình chỉ học tập</option>
+                <option value="Tốt nghiệp">Tốt nghiệp</option>
+              </select>
               <button class="btn btn-primary text-nowrap" data-bs-toggle="modal" data-bs-target="#modalSinhVien" onclick="openCreateSv()">
                 <i class="bi bi-plus-lg me-1"></i> Thêm sinh viên
               </button>
@@ -82,8 +92,23 @@
               <small class="text-muted">Tên đăng nhập sẽ là MSSV.</small>
             </div>
           </div></div>
-          <div class="col-md-6" id="svTrangThaiDiv" style="display:none;"><label class="form-label">Trạng thái</label>
-            <select id="svTrangThai" class="form-select"><option>Đang học</option><option>Đã nghỉ</option></select>
+          <div class="col-md-6" id="svTrangThaiDiv" style="display:none;">
+            <label class="form-label fw-semibold">Trạng thái sinh viên</label>
+            <select id="svTrangThai" class="form-select" onchange="onSvTrangThaiChange(this.value)">
+              <option value="Đang học">Đang học</option>
+              <option value="Cảnh báo học vụ">Cảnh báo học vụ</option>
+              <option value="Bảo lưu">Bảo lưu</option>
+              <option value="Đã nghỉ">Đã nghỉ</option>
+              <option value="Buộc thôi học">Buộc thôi học</option>
+              <option value="Đình chỉ học tập">Đình chỉ học tập</option>
+              <option value="Tốt nghiệp">Tốt nghiệp</option>
+            </select>
+          </div>
+          <div class="col-md-6" id="svLyDoTrangThaiDiv" style="display:none;">
+            <label class="form-label fw-semibold">Lý do / Căn cứ trạng thái</label>
+            <input id="svLyDoTrangThai" class="form-control" list="svLyDoSuggestions" placeholder="Nhập hoặc chọn lý do..." />
+            <datalist id="svLyDoSuggestions"></datalist>
+            <small class="text-muted" id="svLyDoHint">Căn cứ học tập hoặc quyết định quản lý.</small>
           </div>
           </div>
         </div>

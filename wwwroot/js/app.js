@@ -461,16 +461,96 @@ function renderTablePagination(containerId, total, page, pageSize, onPage, onPag
   container.querySelector('select')?.addEventListener('change', e => onPageSize(Number(e.target.value)));
 }
 
+function trangThaiBadgeClass(status) {
+  switch (status) {
+    case 'Đang học': return 'bg-success';
+    case 'Cảnh báo học vụ':
+    case 'Tình trạng cảnh báo': return 'bg-danger';
+    case 'Bảo lưu': return 'bg-warning text-dark';
+    case 'Buộc thôi học': return 'bg-dark';
+    case 'Đình chỉ học tập': return 'bg-danger';
+    case 'Tốt nghiệp': return 'bg-primary';
+    case 'Đã nghỉ': return 'bg-secondary';
+    default: return 'bg-secondary';
+  }
+}
+
+const _trangThaiLyDoPresets = {
+  'Đang học': [
+    'Học tập bình thường theo kế hoạch đào tạo',
+    'Đã xóa cảnh báo học vụ, đủ điều kiện tiếp tục học',
+    'Hết thời hạn bảo lưu, quay trở lại học tập'
+  ],
+  'Cảnh báo học vụ': [
+    'GPA tích lũy dưới 1.0 (Cảnh báo học vụ mức 2)',
+    'GPA tích lũy dưới 2.0 (Cảnh báo học vụ mức 1)',
+    'Nợ từ 2 môn học phần trở lên',
+    'Nợ từ 3 môn học phần trở lên (Nguy cơ buộc thôi học)',
+    'Không tham gia học tập và thi kết thúc học phần',
+    'Điểm rèn luyện xếp loại Yếu liên tiếp 2 học kỳ'
+  ],
+  'Bảo lưu': [
+    'Bảo lưu vì lý do sức khỏe / điều trị bệnh',
+    'Bảo lưu đi thực hiện Nghĩa vụ quân sự',
+    'Bảo lưu vì hoàn cảnh gia đình đặc biệt',
+    'Bảo lưu tham gia chương trình trao đổi sinh viên / du học'
+  ],
+  'Đã nghỉ': [
+    'Sinh viên có đơn tự nguyện xin thôi học',
+    'Chuyển trường theo nguyện vọng cá nhân',
+    'Đi du học nước ngoài tự túc'
+  ],
+  'Buộc thôi học': [
+    'Bị cảnh báo học vụ mức 2 liên tiếp 2 học kỳ',
+    'Vượt quá thời gian tối đa được phép học tập theo quy chế',
+    'Tự ý bỏ học không phép quá thời hạn quy định',
+    'Vi phạm kỷ luật / quy chế thi nghiêm trọng'
+  ],
+  'Đình chỉ học tập': [
+    'Đình chỉ 1 học kỳ do gian lận thi cử có tổ chức',
+    'Đình chỉ 1 năm học do vi phạm kỷ luật nhà trường',
+    'Đình chỉ học tập theo quyết định của Hội đồng kỷ luật'
+  ],
+  'Tốt nghiệp': [
+    'Đã tích lũy đủ tín chỉ và chuẩn đầu ra theo chương trình đào tạo',
+    'Đủ điều kiện tốt nghiệp đợt 1 năm 2026',
+    'Đủ điều kiện tốt nghiệp đợt 2 năm 2026',
+    'Tốt nghiệp loại Giỏi',
+    'Tốt nghiệp loại Xuất sắc'
+  ]
+};
+
+function onSvTrangThaiChange(val) {
+  updateSvLyDoSuggestions(val);
+  const input = document.getElementById("svLyDoTrangThai");
+  if (!input) return;
+
+  const presets = _trangThaiLyDoPresets[val] || [];
+  if (presets.length > 0 && (!input.value || input.dataset.autoFilled === 'true')) {
+    input.value = presets[0];
+    input.dataset.autoFilled = 'true';
+  }
+}
+
+function updateSvLyDoSuggestions(status) {
+  const datalist = document.getElementById("svLyDoSuggestions");
+  if (!datalist) return;
+  const presets = _trangThaiLyDoPresets[status] || [];
+  datalist.innerHTML = presets.map(r => `<option value="${r}">`).join('');
+}
+
 function renderSinhVienTable() {
   const table = document.getElementById('svTable');
   if (!table) return;
   const role = localStorage.getItem('role');
   const lop = (document.getElementById('filterLop')?.value || '').trim().toLocaleLowerCase('vi');
+  const statusFilter = (document.getElementById('filterTrangThai')?.value || '').trim();
   const q = (document.getElementById('filterQ')?.value || '').trim().toLocaleLowerCase('vi');
   const rows = _sinhVienRows.filter(sv => {
     const matchesClass = !lop || (sv.LopSinhHoat || '').toLocaleLowerCase('vi') === lop;
+    const matchesStatus = !statusFilter || (sv.TrangThai || 'Đang học') === statusFilter;
     const haystack = `${sv.Id || ''} ${sv.HoTen || ''} ${sv.Email || ''}`.toLocaleLowerCase('vi');
-    return matchesClass && (!q || haystack.includes(q));
+    return matchesClass && matchesStatus && (!q || haystack.includes(q));
   });
   const count = document.getElementById('svCount');
   if (count) count.textContent = `Tổng ${_sinhVienRows.length} sinh viên · ${rows.length} kết quả`;
@@ -488,7 +568,10 @@ function renderSinhVienTable() {
       return `<tr>
         <td><code>${sv.Id}</code></td><td>${sv.HoTen}</td><td>${sv.LopSinhHoat || ''}</td>
         <td>${sv.TenKhoa || sv.MaKhoa || ''}</td>
-        <td><span class="badge bg-secondary">${sv.TrangThai || 'Đang học'}</span></td>
+        <td>
+          <span class="badge ${trangThaiBadgeClass(sv.TrangThai || 'Đang học')}">${sv.TrangThai || 'Đang học'}</span>
+          ${sv.LyDoTrangThai ? `<div class="small text-muted mt-1" style="max-width:180px;font-size:0.75rem;" title="${sv.LyDoTrangThai}"><i class="bi bi-info-circle me-1"></i>${sv.LyDoTrangThai}</div>` : ''}
+        </td>
         <td class="text-end"><div class="table-actions">
           <button class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Xem hồ sơ" aria-label="Xem hồ sơ sinh viên" onclick="xemSv('${sv.Id}')"><i class="bi bi-eye"></i></button>
           ${adminActions}
@@ -541,10 +624,33 @@ async function editSv(id) {
   document.getElementById("svLop").value = sv.LopSinhHoat || "";
   document.getElementById("svKhoaHoc").value = sv.KhoaHoc || "";
   document.getElementById("svTrangThaiDiv").style.display = "block";
+  document.getElementById("svLyDoTrangThaiDiv").style.display = "block";
   document.getElementById("svCreateAccountDiv").style.display = "none";
   document.getElementById("svTaoTaiKhoan").checked = false;
   document.getElementById("svMatKhauTaiKhoan").value = "";
-  document.getElementById("svTrangThai").value = sv.TrangThai || "Đang học";
+
+  const currentStatus = sv.TrangThai || "Đang học";
+  document.getElementById("svTrangThai").value = currentStatus;
+  updateSvLyDoSuggestions(currentStatus);
+
+  const lyDoInput = document.getElementById("svLyDoTrangThai");
+  lyDoInput.value = sv.LyDoTrangThai || "";
+  lyDoInput.dataset.autoFilled = sv.LyDoTrangThai ? 'false' : 'true';
+
+  // Tự động gợi ý lý do nếu sinh viên bị cảnh báo học vụ mà chưa có lý do lưu trước đó
+  if (!sv.LyDoTrangThai && (currentStatus === 'Cảnh báo học vụ' || currentStatus === 'Tình trạng cảnh báo')) {
+    const bd = sv.BangDiem || [];
+    const graded = bd.filter(gradeComplete);
+    const noMon = graded.filter(b => (b.DiemTongKet || 0) < 4.0).length;
+    const totalTc = graded.reduce((s, b) => s + (b.SoTinChi || 0), 0);
+    const gpa = totalTc > 0 ? (graded.reduce((s, b) => s + (b.DiemTongKet || 0) * (b.SoTinChi || 0), 0) / totalTc) : 0;
+    if (gpa < 1.0 || noMon >= 3) {
+      lyDoInput.value = `GPA < 1.0 (${gpa.toFixed(2)}) hoặc nợ ${noMon} môn (Mức 2)`;
+    } else if (gpa < 2.0 || noMon >= 2) {
+      lyDoInput.value = `GPA < 2.0 (${gpa.toFixed(2)}) hoặc nợ ${noMon} môn (Mức 1)`;
+    }
+  }
+
   clearModalError("modalSinhVien");
   document.getElementById("svModalTitle").innerText = "Chỉnh sửa hồ sơ Sinh viên";
   new bootstrap.Modal(document.getElementById("modalSinhVien")).show();
@@ -575,7 +681,11 @@ async function xemSv(id) {
         <div class="d-flex justify-content-between align-items-start">
           <div>
             <h5 class="fw-bold">${sv.HoTen} <small class="text-muted fw-normal">${sv.Id}</small></h5>
-            <p class="text-muted mb-0">Lớp ${sv.LopSinhHoat} · Khoa: ${sv.TenKhoa || sv.MaKhoa || "N/A"} · ${sv.Email || ''} · ${sv.TrangThai || ""}</p>
+            <p class="text-muted mb-1">Lớp ${sv.LopSinhHoat} · Khoa: ${sv.TenKhoa || sv.MaKhoa || "N/A"} · ${sv.Email || ''}</p>
+            <div class="d-flex align-items-center flex-wrap gap-2 mt-2">
+              <span class="badge ${trangThaiBadgeClass(sv.TrangThai || 'Đang học')} px-2 py-1">${sv.TrangThai || 'Đang học'}</span>
+              ${sv.LyDoTrangThai ? `<span class="small text-muted"><i class="bi bi-info-circle me-1"></i>Lý do trạng thái: <b class="text-dark">${sv.LyDoTrangThai}</b></span>` : ''}
+            </div>
           </div>
           ${hocluc ? `<div class="text-end">
             <div class="gpa-display">${(hocluc.GPA == null ? '\u2014' : Number(hocluc.GPA).toFixed(2))}</div>
@@ -630,7 +740,17 @@ function openCreateSv() {
   });
   document.getElementById("svGioiTinh").value = "Nam";
   const ttDiv = document.getElementById("svTrangThaiDiv");
-  if (ttDiv) ttDiv.style.display = "none";
+  if (ttDiv) ttDiv.style.display = "block";
+  const lyDoDiv = document.getElementById("svLyDoTrangThaiDiv");
+  if (lyDoDiv) lyDoDiv.style.display = "block";
+  const statusEl = document.getElementById("svTrangThai");
+  if (statusEl) statusEl.value = "Đang học";
+  updateSvLyDoSuggestions("Đang học");
+  const lyDoInput = document.getElementById("svLyDoTrangThai");
+  if (lyDoInput) {
+    lyDoInput.value = "Học tập bình thường theo kế hoạch đào tạo";
+    lyDoInput.dataset.autoFilled = "true";
+  }
   document.getElementById("svCreateAccountDiv").style.display = "block";
   document.getElementById("svTaoTaiKhoan").checked = false;
   document.getElementById("svMatKhauTaiKhoan").value = "";
@@ -709,6 +829,7 @@ async function saveSinhVienCore(e) {
     MaKhoa: document.getElementById("svMaKhoa").value,
     KhoaHoc: document.getElementById("svKhoaHoc").value,
     TrangThai: document.getElementById("svTrangThai")?.value || "Đang học",
+    LyDoTrangThai: (document.getElementById("svLyDoTrangThai")?.value || "").trim() || null,
     BangDiem: existingBangDiem,
     TaoTaiKhoan: taoTaiKhoan,
     MatKhauTaiKhoan: taoTaiKhoan ? matKhauTaiKhoan : null
