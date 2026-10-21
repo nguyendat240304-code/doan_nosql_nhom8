@@ -170,20 +170,20 @@
               
               <!-- Hàng 1: Tìm theo tên hoặc MSSV -->
               <div class="row g-2 align-items-center mb-2">
-                <label for="diemSearchText" class="col-sm-4 col-form-label col-form-label-sm fw-semibold text-sm-end text-start mb-0">
+                <label for="diemSearchText" class="col-sm-auto col-form-label col-form-label-sm fw-semibold text-start mb-0 text-nowrap" style="width: 185px;">
                   Tìm theo tên hoặc MSSV
                 </label>
-                <div class="col-sm-8">
+                <div class="col-sm">
                   <input id="diemSearchText" class="form-control form-control-sm" placeholder="Nhập tên hoặc MSSV..." oninput="filterDiemTable()" />
                 </div>
               </div>
 
               <!-- Hàng 2: Sắp xếp -->
               <div class="row g-2 align-items-center">
-                <label for="diemSortSelect" class="col-sm-4 col-form-label col-form-label-sm fw-semibold text-sm-end text-start mb-0">
+                <label for="diemSortSelect" class="col-sm-auto col-form-label col-form-label-sm fw-semibold text-sm-end text-start mb-0 text-nowrap pe-sm-2" style="width: 185px;">
                   Sắp xếp
                 </label>
-                <div class="col-sm-8">
+                <div class="col-sm">
                   <select id="diemSortSelect" class="form-select form-select-sm" onchange="onDiemSortSelectChange(this.value)">
                     <option value="gpa_desc">GPA cao nhất → thấp nhất</option>
                     <option value="gpa_asc">GPA thấp nhất → cao nhất</option>
