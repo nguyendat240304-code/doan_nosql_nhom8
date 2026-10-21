@@ -3,73 +3,246 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LMS - Quản lý Môn học</title>
+  <title>LMS - Quản lý Môn học &amp; Chuẩn đầu ra (CLO)</title>
   <link href="/lib/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
   <link href="/lib/bootstrap-icons/font/bootstrap-icons.min.css" rel="stylesheet" />
   <link href="/css/app.css" rel="stylesheet" />
+  <style>
+    .bloom-bac-1 { background-color: #6c757d; color: #fff; }
+    .bloom-bac-2 { background-color: #198754; color: #fff; }
+    .bloom-bac-3 { background-color: #0d6efd; color: #fff; }
+    .bloom-bac-4 { background-color: #fd7e14; color: #fff; }
+    .bloom-bac-5 { background-color: #6f42c1; color: #fff; }
+    .bloom-bac-6 { background-color: #d63384; color: #fff; }
+    .min-h-38 { min-height: 38px; }
+    .nav-pills .nav-link { border-radius: 8px; padding: 8px 16px; }
+    .stat-card { border-radius: 10px; transition: transform 0.2s; }
+    .stat-card:hover { transform: translateY(-2px); }
+  </style>
 </head>
 <body>
 <main id="page-main-content">
   <div id="alertBox"></div>
 
-  <div class="page-header">
+  <!-- Header -->
+  <div class="page-header d-flex justify-content-between align-items-center mb-3">
     <div>
-      <h4><i class="bi bi-book text-primary me-2"></i>Quản lý Môn học</h4>
-      <small class="text-muted">Danh sách các môn học và chuẩn đầu ra (CLO) trong chương trình đào tạo</small>
+      <h4 class="mb-1"><i class="bi bi-book text-primary me-2"></i>Quản lý Môn học &amp; Chuẩn đầu ra (CLO)</h4>
+      <small class="text-muted">Danh sách học phần, ma trận tiên quyết và chuẩn đầu ra học phần theo tiêu chuẩn HUIT</small>
     </div>
     <button class="btn btn-primary" id="btnAddMonHoc" data-bs-toggle="modal" data-bs-target="#modalMonHoc" onclick="openCreateMonHoc()">
-      <i class="bi bi-plus-lg me-1"></i> Thêm môn học
+      <i class="bi bi-plus-lg me-1"></i> Thêm môn học mới
     </button>
   </div>
 
-  <!-- Filter -->
-  <div class="card mb-4">
-    <div class="card-body">
-      <div class="row g-2 align-items-end">
-        <div class="col-md-5">
-          <label class="form-label fw-semibold">Tìm kiếm</label>
-          <input id="mhSearch" class="form-control" placeholder="Tìm mã môn, tên môn..." oninput="filterMonHocTable()" />
+  <!-- Nav Tabs -->
+  <ul class="nav nav-pills mb-3 border-bottom pb-2 gap-2" id="mhTabs" role="tablist">
+    <li class="nav-item">
+      <button class="nav-link active fw-semibold" id="tab-monhoc-btn" data-bs-toggle="pill" data-bs-target="#tab-monhoc" type="button" role="tab" onclick="onSwitchTab('monhoc')">
+        <i class="bi bi-book me-1"></i>Danh sách Môn học
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link fw-semibold" id="tab-clo-btn" data-bs-toggle="pill" data-bs-target="#tab-clo" type="button" role="tab" onclick="onSwitchTab('clo')">
+        <i class="bi bi-award-fill me-1"></i>Quản lý Chuẩn đầu ra (CLO)
+        <span id="badgeTotalClos" class="badge bg-secondary ms-1">0</span>
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link fw-semibold" id="tab-huit-btn" data-bs-toggle="pill" data-bs-target="#tab-huit" type="button" role="tab" onclick="onSwitchTab('huit')">
+        <i class="bi bi-mortarboard-fill me-1"></i>Chuẩn CLO HUIT mẫu
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="mhTabsContent">
+    <!-- TAB 1: DANH SÁCH MÔN HỌC -->
+    <div class="tab-pane fade show active" id="tab-monhoc" role="tabpanel">
+      <!-- Filter Môn học -->
+      <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-body py-3">
+          <div class="row g-2 align-items-end">
+            <div class="col-md-5">
+              <label class="form-label small fw-semibold text-primary"><i class="bi bi-search me-1"></i>Tìm kiếm môn học</label>
+              <input id="mhSearch" class="form-control form-control-sm" placeholder="Tìm theo mã môn, tên môn..." oninput="filterMonHocTable()" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold text-primary"><i class="bi bi-building me-1"></i>Lọc theo khoa</label>
+              <select id="mhFilterKhoa" class="form-select form-select-sm" onchange="filterMonHocTable()">
+                <option value="">Tất cả các khoa</option>
+              </select>
+            </div>
+            <div class="col-md-3 text-md-end text-start">
+              <span id="mhCount" class="badge bg-secondary p-2">0 môn học</span>
+            </div>
+          </div>
         </div>
-        <div class="col-md-4">
-          <label class="form-label fw-semibold">Lọc theo khoa</label>
-          <select id="mhFilterKhoa" class="form-select" onchange="filterMonHocTable()">
-            <option value="">Tất cả các khoa</option>
-          </select>
-        </div>
-        <div class="col-md-3 text-end">
-          <span id="mhCount" class="badge bg-secondary p-2"></span>
+      </div>
+
+      <!-- Bảng Môn học -->
+      <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 100px;">Mã môn</th>
+                <th>Tên môn học</th>
+                <th class="text-center" style="width: 90px;">Số TC</th>
+                <th class="text-center" style="width: 90px;">Lý thuyết</th>
+                <th class="text-center" style="width: 90px;">Thực hành</th>
+                <th>Khoa</th>
+                <th>Chuẩn đầu ra (CLO)</th>
+                <th class="text-center" style="width: 140px;">Cây tiên quyết</th>
+                <script>
+                  if (localStorage.getItem('role') === 'admin') {
+                    document.write('<th class="text-end" style="width: 110px;">Thao tác</th>');
+                  }
+                </script>
+              </tr>
+            </thead>
+            <tbody id="mhTable">
+              <tr class="loading-row"><td colspan="9" class="text-center text-muted py-4">
+                <div class="spinner-border spinner-border-sm text-primary me-2"></div>Đang tải danh sách môn học...
+              </td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Table -->
-  <div class="card">
-    <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0">
-        <thead>
-          <tr>
-            <th>Mã môn</th>
-            <th>Tên môn học</th>
-            <th class="text-center">Số TC</th>
-            <th class="text-center">Lý thuyết</th>
-            <th class="text-center">Thực hành</th>
-            <th>Khoa</th>
-            <th>Chuẩn đầu ra (CLO)</th>
-            <th class="text-center">Cây tiên quyết</th>
-            <script>
-              if (localStorage.getItem('role') === 'admin') {
-                document.write('<th class="text-end">Thao tác</th>');
-              }
-            </script>
-          </tr>
-        </thead>
-        <tbody id="mhTable">
-          <tr class="loading-row"><td colspan="8" class="text-center text-muted py-4">
-            <div class="spinner-border spinner-border-sm text-primary me-2"></div>Đang tải...
-          </td></tr>
-        </tbody>
-      </table>
+    <!-- TAB 2: QUẢN LÝ CHUẨN ĐẦU RA (CLO HUB) -->
+    <div class="tab-pane fade" id="tab-clo" role="tabpanel">
+      <!-- Thống kê CLO -->
+      <div class="row g-3 mb-4">
+        <div class="col-lg-3 col-sm-6">
+          <div class="card border-0 shadow-sm stat-card bg-primary text-white">
+            <div class="card-body py-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="small text-white-50">Tổng số CLO</div>
+                  <h3 class="mb-0 fw-bold" id="statTotalClos">0</h3>
+                </div>
+                <i class="bi bi-award fs-1 text-white-50"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-sm-6">
+          <div class="card border-0 shadow-sm stat-card bg-success text-white">
+            <div class="card-body py-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="small text-white-50">Môn đã có CLO</div>
+                  <h3 class="mb-0 fw-bold" id="statMonWithClo">0</h3>
+                </div>
+                <i class="bi bi-check-circle-fill fs-1 text-white-50"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-sm-6">
+          <div class="card border-0 shadow-sm stat-card bg-warning text-dark">
+            <div class="card-body py-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="small text-muted">Môn chưa có CLO</div>
+                  <h3 class="mb-0 fw-bold" id="statMonWithoutClo">0</h3>
+                </div>
+                <i class="bi bi-exclamation-circle-fill fs-1 text-black-50"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-sm-6">
+          <div class="card border-0 shadow-sm stat-card bg-info text-white">
+            <div class="card-body py-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="small text-white-50">CLO Bậc 3+ (Vận dụng/PT)</div>
+                  <h3 class="mb-0 fw-bold" id="statHigherBloom">0</h3>
+                </div>
+                <i class="bi bi-bar-chart-steps fs-1 text-white-50"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter CLO -->
+      <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-body py-3">
+          <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold text-primary"><i class="bi bi-search me-1"></i>Tìm kiếm chuẩn đầu ra</label>
+              <input id="cloSearchText" class="form-control form-control-sm" placeholder="Tìm theo mã CLO, mô tả..." oninput="filterCloTable()" />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold text-primary"><i class="bi bi-building me-1"></i>Khoa</label>
+              <select id="cloFilterKhoa" class="form-select form-select-sm" onchange="filterCloTable()">
+                <option value="">Tất cả các khoa</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold text-primary"><i class="bi bi-book me-1"></i>Môn học</label>
+              <select id="cloFilterMon" class="form-select form-select-sm" onchange="filterCloTable()">
+                <option value="">Tất cả môn học</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small fw-semibold text-primary"><i class="bi bi-layers me-1"></i>Mức độ Bloom</label>
+              <select id="cloFilterMucDo" class="form-select form-select-sm" onchange="filterCloTable()">
+                <option value="">Tất cả mức độ</option>
+                <option value="Nhớ">Nhớ (Bậc 1)</option>
+                <option value="Hiểu">Hiểu (Bậc 2)</option>
+                <option value="Vận dụng">Vận dụng (Bậc 3-4)</option>
+                <option value="Phân tích">Phân tích (Bậc 4)</option>
+                <option value="Đánh giá">Đánh giá (Bậc 5)</option>
+                <option value="Sáng tạo">Sáng tạo (Bậc 6)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bảng Tổng hợp CLO -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+          <h6 class="mb-0 fw-bold text-primary"><i class="bi bi-table me-2"></i>Ma trận Chuẩn đầu ra (CLO) theo Học phần</h6>
+          <span id="cloFilteredCount" class="badge bg-secondary">0 chuẩn đầu ra</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 100px;">Mã CLO</th>
+                <th style="width: 220px;">Học phần sở hữu</th>
+                <th style="width: 160px;">Khoa</th>
+                <th>Mô tả chuẩn đầu ra học phần</th>
+                <th style="width: 160px;" class="text-center">Thang Bloom / Mức độ</th>
+                <th style="width: 100px;" class="text-end">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="cloMasterTable">
+              <tr><td colspan="6" class="text-center py-4 text-muted">Đang tải ma trận chuẩn đầu ra...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: NGÂN HÀNG CLO HUIT MẪU -->
+    <div class="tab-pane fade" id="tab-huit" role="tabpanel">
+      <div class="alert alert-info border-0 shadow-sm d-flex align-items-center mb-4">
+        <i class="bi bi-mortarboard-fill fs-2 text-primary me-3"></i>
+        <div>
+          <h6 class="fw-bold mb-1">Khung Chuẩn Đầu Ra Học Phần (CLO) - Tiêu chuẩn Trường Đại học Công Thương TP.HCM (HUIT)</h6>
+          <p class="mb-0 small">Được thiết kế dựa trên thang phân loại Bloom (6 bậc nhận thức) kết hợp nhóm năng lực cốt lõi: <strong>Kiến thức chuyên môn</strong>, <strong>Kỹ năng kỹ thuật &amp; công cụ</strong>, <strong>Kỹ năng mềm/làm việc nhóm</strong> và <strong>Đạo đức, tự chủ &amp; trách nhiệm</strong>.</p>
+        </div>
+      </div>
+
+      <div class="row g-4" id="huitCloBankCards">
+        <!-- Rendered by JS -->
+      </div>
     </div>
   </div>
 </main>
@@ -77,7 +250,7 @@
 <!-- Modal Thêm/Sửa Môn Học -->
 <div class="modal fade" id="modalMonHoc" tabindex="-1">
   <div class="modal-dialog modal-lg">
-    <form class="modal-content" onsubmit="saveMonHoc(event)">
+    <form class="modal-content border-0 shadow" onsubmit="saveMonHoc(event)">
       <div class="modal-header bg-primary text-white">
         <h5 class="modal-title" id="mhModalTitle"><i class="bi bi-book me-2"></i>Thêm môn học</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -87,419 +260,139 @@
         <div id="modalMonHoc-error" class="alert alert-danger py-2 mb-3" style="display:none;"></div>
         
         <div class="row g-3 mb-4">
+          <!-- Mã môn học + Live check trùng + Nút gợi ý mã -->
           <div class="col-md-4">
             <label class="form-label fw-semibold">Mã môn học <span class="text-danger">*</span></label>
-            <input id="mhId" class="form-control" required placeholder="VD: MH001" />
+            <div class="input-group">
+              <input id="mhId" class="form-control text-uppercase" required placeholder="VD: MH001" oninput="onMhIdChange(this.value)" onblur="onMhIdChange(this.value)" />
+              <button type="button" class="btn btn-outline-secondary" id="btnGenMhId" onclick="generateNextMhId()" title="Tự động đề xuất mã môn học tiếp theo chưa sử dụng">
+                <i class="bi bi-magic me-1"></i>Gợi ý
+              </button>
+            </div>
+            <div id="mhIdFeedback" class="small mt-1" style="display:none;"></div>
           </div>
+
           <div class="col-md-8">
             <label class="form-label fw-semibold">Tên môn học <span class="text-danger">*</span></label>
-            <input id="mhTenMon" class="form-control" required placeholder="VD: Lập trình Web" />
+            <input id="mhTenMon" class="form-control" required placeholder="VD: Lập trình Web nâng cao" />
           </div>
+
           <div class="col-md-6">
             <label class="form-label fw-semibold">Khoa quản lý <span class="text-danger">*</span></label>
-            <select id="mhMaKhoa" class="form-select" required>
+            <select id="mhMaKhoa" class="form-select" required onchange="onMhMaKhoaModalChange(this.value)">
               <option value="">-- Chọn khoa --</option>
             </select>
           </div>
+
           <div class="col-md-2">
             <label class="form-label fw-semibold">Số tín chỉ <span class="text-danger">*</span></label>
             <input id="mhSoTinChi" type="number" class="form-control" min="1" value="3" required />
           </div>
+
           <div class="col-md-2">
             <label class="form-label fw-semibold">Lý thuyết (tiết)</label>
             <input id="mhLyThuyet" type="number" class="form-control" min="0" value="30" />
           </div>
+
           <div class="col-md-2">
             <label class="form-label fw-semibold">Thực hành (tiết)</label>
             <input id="mhThucHanh" type="number" class="form-control" min="0" value="30" />
           </div>
+
+          <!-- Môn học tiên quyết: Bộ chọn dropdown theo Khoa -->
           <div class="col-md-12">
-            <label class="form-label fw-semibold">Môn học tiên quyết <small class="text-muted">(Phân cách bằng dấu phẩy, VD: MH001, MH002)</small></label>
-            <input id="mhMonTienQuyet" class="form-control" placeholder="VD: MH001, MH002 (Sinh viên cần hoàn thành các môn này trước)" />
+            <label class="form-label fw-semibold">
+              <i class="bi bi-diagram-2 text-primary me-1"></i>Môn học tiên quyết
+            </label>
+            
+            <div class="card p-2 bg-light border mb-2">
+              <div class="row g-2 align-items-center">
+                <div class="col-md-4">
+                  <label class="small text-muted mb-1 fw-semibold">1. Lọc theo Khoa:</label>
+                  <select id="tqKhoaSelect" class="form-select form-select-sm" onchange="updateTqMonOptions()">
+                    <option value="">-- Tất cả các khoa --</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="small text-muted mb-1 fw-semibold">2. Chọn môn tiên quyết:</label>
+                  <select id="tqMonSelect" class="form-select form-select-sm">
+                    <option value="">-- Chọn môn học --</option>
+                  </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                  <button type="button" class="btn btn-sm btn-primary w-100" onclick="addMonTienQuyetFromSelect()" title="Thêm môn đã chọn vào danh sách tiên quyết">
+                    <i class="bi bi-plus-lg me-1"></i>Thêm
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="small text-muted fw-semibold">Môn tiên quyết đã chọn:</span>
+              <span id="tqCountBadge" class="badge bg-secondary">0 môn</span>
+            </div>
+            <div id="tqTagsContainer" class="d-flex flex-wrap gap-1 p-2 border rounded bg-white min-h-38 align-items-center mb-1">
+              <!-- Render badges -->
+            </div>
+            <input type="hidden" id="mhMonTienQuyet" />
+            <small class="text-muted"><i class="bi bi-info-circle me-1"></i>Sinh viên cần hoàn thành các môn tiên quyết trên trước khi được phép đăng ký lớp học phần này.</small>
           </div>
         </div>
 
-        <!-- Quản lý danh sách CLO -->
+        <!-- Quản lý danh sách CLO theo tiêu chuẩn HUIT -->
         <div class="border rounded p-3 bg-light">
-          <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
             <h6 class="mb-0 fw-bold text-primary"><i class="bi bi-list-check me-1"></i>Danh sách Chuẩn đầu ra (CLO)</h6>
-            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addCloRow()">
-              <i class="bi bi-plus-circle me-1"></i>Thêm CLO
-            </button>
+            <div class="d-flex gap-2 flex-wrap">
+              <button type="button" class="btn btn-sm btn-outline-success" onclick="applyHuitPresetClos()" title="Tự động nạp bộ 4 Chuẩn đầu ra HUIT chuẩn hóa">
+                <i class="bi bi-mortarboard-fill me-1"></i>Nạp bộ CLO HUIT mẫu (4 CĐR)
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-primary" onclick="addCloRow()">
+                <i class="bi bi-plus-circle me-1"></i>Thêm dòng CLO
+              </button>
+            </div>
           </div>
+          
           <div class="table-responsive">
-            <table class="table table-sm table-bordered bg-white align-middle mb-0">
+            <table class="table table-sm table-bordered bg-white align-middle mb-1">
               <thead class="table-light">
                 <tr>
-                  <th style="width: 25%;">Mã CLO <span class="text-danger">*</span></th>
-                  <th>Mô tả chuẩn đầu ra</th>
-                  <style>
-                    .clo-mucdo-col { width: 25%; }
-                  </style>
-                  <th class="clo-mucdo-col">Mức độ</th>
-                  <th style="width: 50px;" class="text-center">Xóa</th>
+                  <th style="width: 110px;">Mã CLO <span class="text-danger">*</span></th>
+                  <th>Mô tả chuẩn đầu ra học phần</th>
+                  <th style="width: 170px;">Mức độ Bloom</th>
+                  <th style="width: 45px;" class="text-center">Xóa</th>
                 </tr>
               </thead>
               <tbody id="cloTableBody">
               </tbody>
             </table>
           </div>
+          <small class="text-muted"><i class="bi bi-lightbulb me-1"></i>Bạn có thể gõ hoặc chọn gợi ý câu mô tả CLO chuẩn HUIT từ danh sách xổ xuống của ô mô tả.</small>
         </div>
       </div>
 
+      <!-- Datalist đề xuất mô tả CLO HUIT -->
+      <datalist id="huitCloDatalist">
+        <option value="Giải thích, phân tích được các khái niệm, nguyên lý, mô hình và quy trình kỹ thuật nền tảng của học phần.">
+        <option value="Vận dụng kiến thức cốt lõi, các thuật toán, phương pháp và công nghệ phù hợp để thiết kế, cài đặt và giải quyết bài toán chuyên ngành.">
+        <option value="Sử dụng thành thạo các công cụ kỹ thuật/phần mềm chuyên dụng; làm việc nhóm hiệu quả, giao tiếp và trình bày báo cáo kỹ thuật rõ ràng.">
+        <option value="Thể hiện ý thức trách nhiệm nghề nghiệp, tuân thủ đạo đức và quy định pháp luật; có năng lực tự học và cập nhật kiến thức liên tục.">
+        <option value="Trình bày và giải thích được các thuật ngữ, khái niệm cơ bản và nguyên lý cốt lõi của học phần.">
+        <option value="Giải thích được quy trình hoạt động, cấu trúc dữ liệu và mô hình giải thuật áp dụng trong bài toán.">
+        <option value="Phân tích, so sánh ưu nhược điểm của các giải pháp công nghệ và lựa chọn phương án tối ưu.">
+        <option value="Thu thập, xử lý, phân tích dữ liệu và xây dựng tài liệu kỹ thuật hoàn chỉnh cho học phần.">
+        <option value="Làm việc nhóm hiệu quả, có khả năng phân chia nhiệm vụ và phối hợp thực hiện đồ án môn học.">
+        <option value="Soạn thảo báo cáo kỹ thuật đúng quy chuẩn, thuyết trình mạch lạc và phản biện các vấn đề chuyên môn.">
+        <option value="Khai thác, đọc hiểu và tổng hợp tài liệu chuyên ngành bằng tiếng Anh/ngoại ngữ.">
+      </datalist>
+
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-        <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle me-1"></i> Lưu môn học</button>
+        <button type="submit" class="btn btn-primary" id="btnSubmitMonHoc"><i class="bi bi-check2-circle me-1"></i> Lưu môn học</button>
       </div>
     </form>
   </div>
 </div>
-
-<script src="/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="/js/layout.js?v=20261017-eye-toggle"></script>
-<script src="/js/app.js"></script>
-<script>
-  renderLayout('monhoc');
-
-  const role = localStorage.getItem('role');
-  if (role !== 'admin') {
-    const btnAdd = document.getElementById('btnAddMonHoc');
-    if (btnAdd) btnAdd.style.display = 'none';
-  }
-
-  let _monHocAll = [];
-  let _khoaMap = {};
-
-  async function loadMonHocPage() {
-    try {
-      const [khoas, monHocs] = await Promise.all([
-        api('/api/Khoa'),
-        api('/api/MonHoc')
-      ]);
-
-      _khoaMap = {};
-      const filterSelect = document.getElementById('mhFilterKhoa');
-      const modalSelect = document.getElementById('mhMaKhoa');
-
-      let filterHtml = '<option value="">Tất cả các khoa</option>';
-      let modalHtml = '<option value="">-- Chọn khoa --</option>';
-
-      khoas.forEach(k => {
-        _khoaMap[k.Id] = k.TenKhoa;
-        filterHtml += `<option value="${k.Id}">${k.TenKhoa} (${k.Id})</option>`;
-        modalHtml += `<option value="${k.Id}">${k.TenKhoa} (${k.Id})</option>`;
-      });
-
-      if (filterSelect) filterSelect.innerHTML = filterHtml;
-      if (modalSelect) modalSelect.innerHTML = modalHtml;
-
-      _monHocAll = monHocs || [];
-      renderMonHocTable(_monHocAll);
-    } catch (e) {
-      toast('Lỗi khi tải danh sách môn học: ' + e.message, 'danger');
-    }
-  }
-
-  function filterMonHocTable() {
-    const q = (document.getElementById('mhSearch')?.value || '').toLowerCase().trim();
-    const maKhoa = document.getElementById('mhFilterKhoa')?.value || '';
-
-    const filtered = _monHocAll.filter(m => {
-      const matchQ = !q || (m.Id || '').toLowerCase().includes(q) || (m.TenMon || '').toLowerCase().includes(q);
-      const matchKhoa = !maKhoa || m.MaKhoa === maKhoa;
-      return matchQ && matchKhoa;
-    });
-
-    renderMonHocTable(filtered);
-  }
-
-  function renderMonHocTable(list) {
-    const countEl = document.getElementById('mhCount');
-    if (countEl) countEl.textContent = `${list.length} môn học`;
-
-    const tbody = document.getElementById('mhTable');
-    if (!tbody) return;
-
-    if (!list.length) {
-      tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state py-4 text-center text-muted"><i class="bi bi-book text-secondary fs-2"></i><div>Không có môn học nào</div></div></td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = list.map(m => {
-      const khoaName = _khoaMap[m.MaKhoa] ? `${_khoaMap[m.MaKhoa]} <small class="text-muted">(${m.MaKhoa})</small>` : m.MaKhoa;
-      
-      const closBadges = (m.CLO || []).map(c => 
-        `<span class="badge bg-light text-dark border me-1 mb-1" title="${c.MoTa || ''} [Mức độ: ${c.MucDo || 'N/A'}]">${c.MaCLO}</span>`
-      ).join('') || '<span class="text-muted font-monospace small">—</span>';
-
-      const adminActions = role === 'admin' ? `
-        <button class="btn btn-sm btn-outline-primary me-1" onclick="editMonHoc('${m.Id}')" title="Sửa môn học"><i class="bi bi-pencil"></i></button>
-        <button class="btn btn-sm btn-outline-danger" onclick="xoaMonHoc('${m.Id}')" title="Xóa môn học"><i class="bi bi-trash"></i></button>` : '';
-
-      return `<tr>
-        <td><code class="fw-semibold text-primary">${m.Id}</code></td>
-        <td class="fw-semibold">${m.TenMon}</td>
-        <td class="text-center"><span class="badge bg-info-subtle text-info-emphasis border">${m.SoTinChi} TC</span></td>
-        <td class="text-center">${m.LyThuyet}</td>
-        <td class="text-center">${m.ThucHanh}</td>
-        <td>${khoaName}</td>
-        <td>${closBadges}</td>
-        <td class="text-center">
-          <button class="btn btn-sm btn-outline-info" onclick="openCayTienQuyet('${m.Id}', '${(m.TenMon || '').replace(/'/g, "\\'")}')" title="Xem cây tiên quyết ($graphLookup)">
-            <i class="bi bi-diagram-3-fill me-1"></i>Xem cây
-          </button>
-        </td>
-        ${role === 'admin' ? `<td class="text-end">${adminActions}</td>` : ''}
-      </tr>`;
-    }).join('');
-  }
-
-  // Quản lý UI danh sách CLO trong modal
-  function addCloRow(maCLO = '', moTa = '', mucDo = 'T') {
-    const tbody = document.getElementById('cloTableBody');
-    if (!tbody) return;
-
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>
-        <input type="text" class="form-control form-control-sm clo-maclo" value="${maCLO}" placeholder="VD: CLO1" required />
-      </td>
-      <td>
-        <input type="text" class="form-control form-control-sm clo-mota" value="${moTa}" placeholder="Mô tả chuẩn đầu ra..." />
-      </td>
-      <td>
-        <input type="text" class="form-control form-control-sm clo-mucdo" value="${mucDo}" placeholder="VD: Hiểu / Vận dụng" />
-      </td>
-      <td class="text-center">
-        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeCloRow(this)" title="Xóa CLO này"><i class="bi bi-trash"></i></button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  }
-
-  function removeCloRow(btn) {
-    const tr = btn.closest('tr');
-    if (tr) tr.remove();
-  }
-
-  function getCloListFromUI() {
-    const rows = document.querySelectorAll('#cloTableBody tr');
-    const list = [];
-    rows.forEach(tr => {
-      const maCLO = tr.querySelector('.clo-maclo')?.value.trim() || '';
-      const moTa = tr.querySelector('.clo-mota')?.value.trim() || '';
-      const mucDo = tr.querySelector('.clo-mucdo')?.value.trim() || '';
-      if (maCLO) {
-        list.push({ MaCLO: maCLO, MoTa: moTa, MucDo: mucDo });
-      }
-    });
-    return list;
-  }
-
-  function openCreateMonHoc() {
-    document.getElementById('mhIsEdit').value = '';
-    const idInput = document.getElementById('mhId');
-    idInput.disabled = false;
-    idInput.value = '';
-    idInput.classList.remove('is-invalid');
-
-    document.getElementById('mhTenMon').value = '';
-    document.getElementById('mhMaKhoa').value = '';
-    document.getElementById('mhSoTinChi').value = '3';
-    document.getElementById('mhLyThuyet').value = '30';
-    document.getElementById('mhThucHanh').value = '30';
-    document.getElementById('mhMonTienQuyet').value = '';
-
-    document.getElementById('cloTableBody').innerHTML = '';
-    addCloRow('CLO1', '', 'Hiểu');
-
-    clearModalError('modalMonHoc');
-    document.getElementById('mhModalTitle').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Thêm môn học mới';
-  }
-
-  async function editMonHoc(id) {
-    try {
-      const m = await api('/api/MonHoc/' + encodeURIComponent(id));
-      document.getElementById('mhIsEdit').value = m.Id;
-
-      const idInput = document.getElementById('mhId');
-      idInput.value = m.Id;
-      idInput.disabled = true;
-      idInput.classList.remove('is-invalid');
-
-      document.getElementById('mhTenMon').value = m.TenMon || '';
-      document.getElementById('mhMaKhoa').value = m.MaKhoa || '';
-      document.getElementById('mhSoTinChi').value = m.SoTinChi || 3;
-      document.getElementById('mhLyThuyet').value = m.LyThuyet ?? 0;
-      document.getElementById('mhThucHanh').value = m.ThucHanh ?? 0;
-      document.getElementById('mhMonTienQuyet').value = (m.MonTienQuyet || []).join(', ');
-
-      const cloTbody = document.getElementById('cloTableBody');
-      cloTbody.innerHTML = '';
-      if (m.CLO && m.CLO.length > 0) {
-        m.CLO.forEach(c => addCloRow(c.MaCLO, c.MoTa, c.MucDo));
-      } else {
-        addCloRow('CLO1', '', 'Hiểu');
-      }
-
-      clearModalError('modalMonHoc');
-      document.getElementById('mhModalTitle').innerHTML = '<i class="bi bi-pencil-square me-2"></i>Chỉnh sửa môn học';
-      new bootstrap.Modal(document.getElementById('modalMonHoc')).show();
-    } catch (e) {
-      toast('Lỗi khi tải thông tin môn học: ' + e.message, 'danger');
-    }
-  }
-
-  async function saveMonHoc(e) {
-    e.preventDefault();
-    clearModalError('modalMonHoc');
-
-    const isEdit = document.getElementById('mhIsEdit').value;
-    const id = document.getElementById('mhId').value.trim();
-    const tenMon = document.getElementById('mhTenMon').value.trim();
-    const maKhoa = document.getElementById('mhMaKhoa').value;
-    const soTinChi = parseInt(document.getElementById('mhSoTinChi').value, 10);
-    const lyThuyet = parseInt(document.getElementById('mhLyThuyet').value, 10);
-    const thucHanh = parseInt(document.getElementById('mhThucHanh').value, 10);
-
-    if (!id) {
-      showModalError('modalMonHoc', 'Mã môn học không được để trống.');
-      document.getElementById('mhId').classList.add('is-invalid');
-      return;
-    }
-
-    if (!tenMon) {
-      showModalError('modalMonHoc', 'Tên môn học không được để trống.');
-      document.getElementById('mhTenMon').classList.add('is-invalid');
-      return;
-    }
-
-    if (!maKhoa) {
-      showModalError('modalMonHoc', 'Vui lòng chọn khoa quản lý.');
-      document.getElementById('mhMaKhoa').classList.add('is-invalid');
-      return;
-    }
-
-    if (isNaN(soTinChi) || soTinChi <= 0) {
-      showModalError('modalMonHoc', 'Số tín chỉ phải lớn hơn 0.');
-      document.getElementById('mhSoTinChi').classList.add('is-invalid');
-      return;
-    }
-
-    if (isNaN(lyThuyet) || lyThuyet < 0) {
-      showModalError('modalMonHoc', 'Số tiết lý thuyết không được âm.');
-      document.getElementById('mhLyThuyet').classList.add('is-invalid');
-      return;
-    }
-
-    if (isNaN(thucHanh) || thucHanh < 0) {
-      showModalError('modalMonHoc', 'Số tiết thực hành không được âm.');
-      document.getElementById('mhThucHanh').classList.add('is-invalid');
-      return;
-    }
-
-    const cloList = getCloListFromUI();
-    const cloIds = cloList.map(c => c.MaCLO.toLowerCase());
-    const duplicates = cloIds.filter((item, index) => cloIds.indexOf(item) !== index);
-    if (duplicates.length > 0) {
-      showModalError('modalMonHoc', `Mã CLO "${duplicates[0].toUpperCase()}" bị trùng lặp. Vui lòng kiểm tra lại.`);
-      return;
-    }
-
-    const monTienQuyetRaw = document.getElementById('mhMonTienQuyet')?.value || '';
-    const monTienQuyet = monTienQuyetRaw.split(',').map(s => s.trim().toUpperCase()).filter(s => s.length > 0);
-
-    const body = {
-      Id: id,
-      TenMon: tenMon,
-      MaKhoa: maKhoa,
-      SoTinChi: soTinChi,
-      LyThuyet: lyThuyet,
-      ThucHanh: thucHanh,
-      MonTienQuyet: monTienQuyet,
-      CLO: cloList
-    };
-
-    try {
-      if (isEdit) {
-        await api('/api/MonHoc/' + encodeURIComponent(isEdit), {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        });
-        toast(`Đã cập nhật môn học ${id} thành công!`);
-      } else {
-        await api('/api/MonHoc', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        });
-        toast(`Đã thêm môn học ${id} thành công!`);
-      }
-
-      const modalEl = document.getElementById('modalMonHoc');
-      const modalObj = bootstrap.Modal.getInstance(modalEl);
-      if (modalObj) modalObj.hide();
-
-      loadMonHocPage();
-    } catch (err) {
-      showModalError('modalMonHoc', 'Lỗi khi lưu môn học: ' + err.message);
-    }
-  }
-
-  async function xoaMonHoc(id) {
-    if (!await confirmAction(`Xóa môn học "${id}"?`, { title: 'Xóa môn học', confirmText: 'Xóa', variant: 'danger' })) return;
-    try {
-      await api('/api/MonHoc/' + encodeURIComponent(id), { method: 'DELETE' });
-      toast(`Đã xóa môn học ${id} thành công!`, 'warning');
-      loadMonHocPage();
-    } catch (err) {
-      toast(`Không thể xóa môn học: ${err.message}`, 'danger');
-    }
-  }
-
-  async function openCayTienQuyet(id, tenMon) {
-    const modalEl = document.getElementById('modalCayTienQuyet');
-    if (!modalEl) return;
-    document.getElementById('cayTienQuyetMonGoc').textContent = `${tenMon} (${id})`;
-    document.getElementById('cayTienQuyetMoTa').textContent = 'Truy vấn đệ quy cây phụ thuộc bằng toán tử MongoDB $graphLookup';
-    const tbody = document.getElementById('cayTienQuyetBody');
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Đang tải cây môn học tiên quyết...</td></tr>';
-
-    new bootstrap.Modal(modalEl).show();
-
-    try {
-      const res = await api(`/api/MonHoc/${encodeURIComponent(id)}/caytienquyet`);
-      const list = res.TatCaMonTienQuyet || [];
-      if (list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted"><i class="bi bi-check-circle text-success me-1"></i>Môn này là môn cơ sở/nhập môn, không có môn học tiên quyết nào.</td></tr>';
-        return;
-      }
-
-      // Sắp xếp theo bậc tăng dần
-      list.sort((a, b) => (a.BacTienQuyet || 0) - (b.BacTienQuyet || 0));
-
-      tbody.innerHTML = list.map(m => {
-        const bac = (m.BacTienQuyet ?? 0) + 1;
-        const bacBadge = bac === 1
-          ? '<span class="badge bg-danger">Bậc 1 (Trực tiếp)</span>'
-          : `<span class="badge bg-warning text-dark">Bậc ${bac} (Gián tiếp)</span>`;
-        const tq = (m.MonTienQuyet || []).join(', ') || '—';
-        return `<tr>
-          <td>${bacBadge}</td>
-          <td><code class="fw-semibold">${m._id || m.Id}</code></td>
-          <td class="fw-semibold">${m.TenMon || ''}</td>
-          <td class="text-center"><span class="badge bg-info-subtle text-info-emphasis border">${m.SoTinChi || 0} TC</span></td>
-          <td><small class="text-muted">${tq}</small></td>
-        </tr>`;
-      }).join('');
-    } catch (err) {
-      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-3">Lỗi: ${err.message}</td></tr>`;
-    }
-  }
-
-  loadMonHocPage();
-</script>
 
 <!-- Modal Cây Môn Học Tiên Quyết ($graphLookup) -->
 <div class="modal fade" id="modalCayTienQuyet" tabindex="-1">
@@ -535,6 +428,841 @@
     </div>
   </div>
 </div>
+
+<script src="/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/js/layout.js?v=20261021-clo-huit"></script>
+<script src="/js/app.js"></script>
+<script>
+  const _initTab = new URLSearchParams(window.location.search).get('tab');
+  renderLayout(_initTab === 'clo' ? 'chuandaura' : 'monhoc');
+
+  const role = localStorage.getItem('role');
+  if (role !== 'admin') {
+    const btnAdd = document.getElementById('btnAddMonHoc');
+    if (btnAdd) btnAdd.style.display = 'none';
+  }
+
+  let _monHocAll = [];
+  let _khoaMap = {};
+  let _selectedTqList = [];
+
+  // ==========================================
+  // BỘ DỮ LIỆU CLO CHUẨN HUIT
+  // ==========================================
+  const HUIT_CLO_CORE_PRESETS = [
+    {
+      MaCLO: 'CLO1',
+      MoTa: 'Giải thích, phân tích và áp dụng được các khái niệm, nguyên lý, mô hình và quy trình kỹ thuật nền tảng của học phần.',
+      MucDo: 'Hiểu (Bậc 2)'
+    },
+    {
+      MaCLO: 'CLO2',
+      MoTa: 'Vận dụng kiến thức cốt lõi, các thuật toán, phương pháp và công nghệ phù hợp để thiết kế, cài đặt và giải quyết bài toán chuyên ngành.',
+      MucDo: 'Vận dụng (Bậc 3)'
+    },
+    {
+      MaCLO: 'CLO3',
+      MoTa: 'Sử dụng thành thạo các công cụ kỹ thuật/phần mềm chuyên dụng; làm việc nhóm hiệu quả, giao tiếp và trình bày báo cáo kỹ thuật rõ ràng.',
+      MucDo: 'Vận dụng cao (Bậc 4)'
+    },
+    {
+      MaCLO: 'CLO4',
+      MoTa: 'Thể hiện ý thức trách nhiệm nghề nghiệp, tuân thủ đạo đức và quy định pháp luật; có năng lực tự học và cập nhật kiến thức liên tục.',
+      MucDo: 'Thấu hiểu (Bậc 3)'
+    }
+  ];
+
+  const HUIT_CLO_CATEGORIES = [
+    {
+      title: 'Nhóm 1: Kiến thức (Knowledge)',
+      icon: 'bi-journal-code',
+      color: 'primary',
+      description: 'Đánh giá mức độ ghi nhớ, thấu hiểu, phân tích các nguyên lý, giải thuật và nền tảng lý thuyết học phần.',
+      items: [
+        { code: 'CLO1.1', level: 'Nhớ (Bậc 1)', desc: 'Trình bày và giải thích được các thuật ngữ, khái niệm cơ bản và nguyên lý cốt lõi của học phần.' },
+        { code: 'CLO1.2', level: 'Hiểu (Bậc 2)', desc: 'Giải thích, phân tích và áp dụng được các khái niệm, mô hình và quy trình kỹ thuật nền tảng của học phần.' },
+        { code: 'CLO1.3', level: 'Phân tích (Bậc 4)', desc: 'Phân tích, so sánh ưu nhược điểm của các giải pháp kỹ thuật, công nghệ và lựa chọn phương án tối ưu cho bài toán chuyên ngành.' }
+      ]
+    },
+    {
+      title: 'Nhóm 2: Kỹ năng chuyên môn (Hard Skills)',
+      icon: 'bi-tools',
+      color: 'success',
+      description: 'Đánh giá khả năng áp dụng kiến thức chuyên môn vào cài đặt, thiết kế, triển khai và thử nghiệm sản phẩm thực tế.',
+      items: [
+        { code: 'CLO2.1', level: 'Vận dụng (Bậc 3)', desc: 'Vận dụng kiến thức cốt lõi, các thuật toán và phương pháp phù hợp để thiết kế, cài đặt và giải quyết bài toán chuyên ngành.' },
+        { code: 'CLO2.2', level: 'Vận dụng (Bậc 3)', desc: 'Thu thập, xử lý, phân tích dữ liệu và xây dựng tài liệu kỹ thuật hoàn chỉnh đáp ứng yêu cầu của đồ án/học phần.' },
+        { code: 'CLO2.3', level: 'Vận dụng cao (Bậc 4)', desc: 'Sử dụng thành thạo các công cụ, phần mềm, môi trường kỹ thuật chuyên dụng để phát triển và kiểm thử hệ thống.' }
+      ]
+    },
+    {
+      title: 'Nhóm 3: Kỹ năng mềm & Làm việc nhóm (Soft Skills)',
+      icon: 'bi-people-fill',
+      color: 'info',
+      description: 'Đánh giá kỹ năng phối hợp đồng đội, quản lý thời gian, giao tiếp chuyên môn và khai thác tài liệu ngoại ngữ.',
+      items: [
+        { code: 'CLO3.1', level: 'Vận dụng (Bậc 3)', desc: 'Làm việc nhóm hiệu quả, có khả năng phân chia công việc, tương tác chuyên môn và quản lý tiến độ đồ án.' },
+        { code: 'CLO3.2', level: 'Vận dụng (Bậc 3)', desc: 'Soạn thảo tài liệu kỹ thuật đúng chuẩn, thuyết trình mạch lạc và phản biện rõ ràng các vấn đề chuyên môn.' },
+        { code: 'CLO3.3', level: 'Vận dụng (Bậc 3)', desc: 'Khai thác, đọc hiểu và tổng hợp tài liệu chuyên ngành bằng tiếng Anh/ngoại ngữ phục vụ nghiên cứu và học tập.' }
+      ]
+    },
+    {
+      title: 'Nhóm 4: Đạo đức, Tự chủ & Trách nhiệm (Attitude)',
+      icon: 'bi-shield-check',
+      color: 'warning',
+      description: 'Đánh giá thái độ nghề nghiệp, ý thức chấp hành luật pháp, sở hữu trí tuệ và tinh thần tự học suốt đời.',
+      items: [
+        { code: 'CLO4.1', level: 'Thấu hiểu (Bậc 3)', desc: 'Thể hiện ý thức trách nhiệm nghề nghiệp, bảo đảm trung thực học thuật, tuân thủ đạo đức và luật sở hữu trí tuệ.' },
+        { code: 'CLO4.2', level: 'Thấu hiểu (Bậc 3)', desc: 'Có tinh thần tự chủ, chủ động cập nhật công nghệ mới và nuôi dưỡng năng lực học tập suốt đời.' }
+      ]
+    }
+  ];
+
+  // ==========================================
+  // KHỞI TẠO VÀ TẢI TRANG
+  // ==========================================
+  async function loadMonHocPage() {
+    try {
+      const [khoas, monHocs] = await Promise.all([
+        api('/api/Khoa'),
+        api('/api/MonHoc')
+      ]);
+
+      _khoaMap = {};
+      const filterSelect = document.getElementById('mhFilterKhoa');
+      const modalSelect = document.getElementById('mhMaKhoa');
+      const cloFilterKhoa = document.getElementById('cloFilterKhoa');
+
+      let filterHtml = '<option value="">Tất cả các khoa</option>';
+      let modalHtml = '<option value="">-- Chọn khoa --</option>';
+
+      khoas.forEach(k => {
+        _khoaMap[k.Id] = k.TenKhoa;
+        filterHtml += `<option value="${k.Id}">${k.TenKhoa} (${k.Id})</option>`;
+        modalHtml += `<option value="${k.Id}">${k.TenKhoa} (${k.Id})</option>`;
+      });
+
+      if (filterSelect) filterSelect.innerHTML = filterHtml;
+      if (modalSelect) modalSelect.innerHTML = modalHtml;
+      if (cloFilterKhoa) cloFilterKhoa.innerHTML = filterHtml;
+
+      initTqKhoaOptions();
+
+      _monHocAll = monHocs || [];
+      renderMonHocTable(_monHocAll);
+      renderCloManagementTab();
+      renderHuitBankCards();
+
+      // Kiểm tra URL query param ?tab=clo
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('tab') === 'clo') {
+        const btn = document.getElementById('tab-clo-btn');
+        if (btn) bootstrap.Tab.getOrCreateInstance(btn).show();
+      }
+    } catch (e) {
+      toast('Lỗi khi tải danh sách môn học: ' + e.message, 'danger');
+    }
+  }
+
+  function onSwitchTab(tabName) {
+    if (tabName === 'clo') {
+      renderCloManagementTab();
+    }
+  }
+
+  // ==========================================
+  // BẢNG MÔN HỌC & BỘ LỌC
+  // ==========================================
+  function filterMonHocTable() {
+    const q = (document.getElementById('mhSearch')?.value || '').toLowerCase().trim();
+    const maKhoa = document.getElementById('mhFilterKhoa')?.value || '';
+
+    const filtered = _monHocAll.filter(m => {
+      const matchQ = !q || (m.Id || '').toLowerCase().includes(q) || (m.TenMon || '').toLowerCase().includes(q);
+      const matchKhoa = !maKhoa || m.MaKhoa === maKhoa;
+      return matchQ && matchKhoa;
+    });
+
+    renderMonHocTable(filtered);
+  }
+
+  function renderMonHocTable(list) {
+    const countEl = document.getElementById('mhCount');
+    if (countEl) countEl.textContent = `${list.length} môn học`;
+
+    const tbody = document.getElementById('mhTable');
+    if (!tbody) return;
+
+    if (!list.length) {
+      tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state py-4 text-center text-muted"><i class="bi bi-book text-secondary fs-2"></i><div>Không có môn học nào phù hợp.</div></div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map(m => {
+      const khoaName = _khoaMap[m.MaKhoa] ? `${_khoaMap[m.MaKhoa]} <small class="text-muted">(${m.MaKhoa})</small>` : m.MaKhoa;
+      
+      const closBadges = (m.CLO || []).map(c => 
+        `<span class="badge ${getBloomBadgeClass(c.MucDo)} me-1 mb-1" title="${c.MoTa || ''} [Mức độ: ${c.MucDo || 'N/A'}]">${c.MaCLO}</span>`
+      ).join('') || '<span class="text-muted small fst-italic">Chưa có CLO</span>';
+
+      const adminActions = role === 'admin' ? `
+        <button class="btn btn-sm btn-outline-primary me-1" onclick="editMonHoc('${m.Id}')" title="Sửa môn học"><i class="bi bi-pencil"></i></button>
+        <button class="btn btn-sm btn-outline-danger" onclick="xoaMonHoc('${m.Id}')" title="Xóa môn học"><i class="bi bi-trash"></i></button>` : '';
+
+      return `<tr>
+        <td><code class="fw-semibold text-primary fs-6">${m.Id}</code></td>
+        <td class="fw-semibold">${m.TenMon}</td>
+        <td class="text-center"><span class="badge bg-info-subtle text-info-emphasis border">${m.SoTinChi} TC</span></td>
+        <td class="text-center">${m.LyThuyet}</td>
+        <td class="text-center">${m.ThucHanh}</td>
+        <td>${khoaName}</td>
+        <td>${closBadges}</td>
+        <td class="text-center">
+          <button class="btn btn-sm btn-outline-info" onclick="openCayTienQuyet('${m.Id}', '${(m.TenMon || '').replace(/'/g, "\\'")}')" title="Xem cây tiên quyết ($graphLookup)">
+            <i class="bi bi-diagram-3-fill me-1"></i>Xem cây
+          </button>
+        </td>
+        ${role === 'admin' ? `<td class="text-end">${adminActions}</td>` : ''}
+      </tr>`;
+    }).join('');
+  }
+
+  function getBloomBadgeClass(mucDo) {
+    if (!mucDo) return 'bg-secondary';
+    const s = mucDo.toLowerCase();
+    if (s.includes('nhớ') || s.includes('bậc 1')) return 'bloom-bac-1';
+    if (s.includes('hiểu') || s.includes('bậc 2')) return 'bloom-bac-2';
+    if (s.includes('vận dụng cao') || s.includes('bậc 4')) return 'bloom-bac-4';
+    if (s.includes('vận dụng') || s.includes('bậc 3') || s.includes('thấu hiểu')) return 'bloom-bac-3';
+    if (s.includes('đánh giá') || s.includes('bậc 5')) return 'bloom-bac-5';
+    if (s.includes('sáng tạo') || s.includes('bậc 6')) return 'bloom-bac-6';
+    return 'bg-primary';
+  }
+
+  // ==========================================
+  // XỬ LÝ KIỂM TRA TRÙNG MÃ MÔN HỌC & GỢI Ý MÃ
+  // ==========================================
+  function onMhIdChange(val) {
+    const isEdit = document.getElementById('mhIsEdit').value;
+    if (isEdit) return; // Đang sửa thì mã môn bị khóa
+
+    const input = document.getElementById('mhId');
+    const fb = document.getElementById('mhIdFeedback');
+    const submitBtn = document.getElementById('btnSubmitMonHoc');
+    const cleanId = (val || '').trim().toUpperCase();
+
+    if (!cleanId) {
+      input.classList.remove('is-invalid', 'is-valid');
+      fb.style.display = 'none';
+      fb.innerHTML = '';
+      if (submitBtn) submitBtn.disabled = false;
+      return;
+    }
+
+    const existing = _monHocAll.find(m => (m.Id || '').trim().toUpperCase() === cleanId);
+    if (existing) {
+      input.classList.add('is-invalid');
+      input.classList.remove('is-valid');
+      fb.className = 'small mt-1 text-danger fw-semibold';
+      fb.style.display = 'block';
+      fb.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-1"></i>Mã môn "${cleanId}" đã tồn tại! (${existing.TenMon} - ${_khoaMap[existing.MaKhoa] || existing.MaKhoa})`;
+      if (submitBtn) submitBtn.disabled = true;
+    } else {
+      input.classList.remove('is-invalid');
+      input.classList.add('is-valid');
+      fb.className = 'small mt-1 text-success fw-semibold';
+      fb.style.display = 'block';
+      fb.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i>Mã môn "${cleanId}" hợp lệ, chưa có trong hệ thống.`;
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  }
+
+  function generateNextMhId() {
+    const isEdit = document.getElementById('mhIsEdit').value;
+    if (isEdit) return;
+
+    let maxNum = 0;
+    _monHocAll.forEach(m => {
+      const match = (m.Id || '').match(/^MH(\d+)$/i);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNum) maxNum = num;
+      }
+    });
+
+    const nextId = 'MH' + String(maxNum + 1).padStart(3, '0');
+    const input = document.getElementById('mhId');
+    input.value = nextId;
+    onMhIdChange(nextId);
+  }
+
+  // ==========================================
+  // XỬ LÝ MÔN HỌC TIÊN QUYẾT: CHỌN KHOA -> DROPDOWN
+  // ==========================================
+  function initTqKhoaOptions() {
+    const sel = document.getElementById('tqKhoaSelect');
+    if (!sel) return;
+    let html = '<option value="">-- Tất cả các khoa --</option>';
+    Object.keys(_khoaMap).forEach(kId => {
+      html += `<option value="${kId}">${_khoaMap[kId]} (${kId})</option>`;
+    });
+    sel.innerHTML = html;
+  }
+
+  function onMhMaKhoaModalChange(maKhoa) {
+    const tqKhoa = document.getElementById('tqKhoaSelect');
+    if (tqKhoa && maKhoa) {
+      tqKhoa.value = maKhoa;
+      updateTqMonOptions();
+    }
+  }
+
+  function updateTqMonOptions() {
+    const selKhoa = document.getElementById('tqKhoaSelect')?.value || '';
+    const monSelect = document.getElementById('tqMonSelect');
+    if (!monSelect) return;
+
+    const currentId = (document.getElementById('mhId')?.value || '').trim().toUpperCase();
+
+    const available = _monHocAll.filter(m => {
+      const mId = (m.Id || '').trim().toUpperCase();
+      if (mId === currentId) return false;
+      if (_selectedTqList.includes(mId)) return false;
+      if (selKhoa && m.MaKhoa !== selKhoa) return false;
+      return true;
+    });
+
+    if (!available.length) {
+      monSelect.innerHTML = '<option value="">-- Không có môn học nào phù hợp --</option>';
+      monSelect.disabled = true;
+      return;
+    }
+
+    monSelect.disabled = false;
+    let html = `<option value="">-- Chọn môn học (${available.length} môn) --</option>`;
+    available.forEach(m => {
+      html += `<option value="${m.Id}">${m.Id} - ${m.TenMon} (${m.SoTinChi} TC)</option>`;
+    });
+    monSelect.innerHTML = html;
+  }
+
+  function addMonTienQuyetFromSelect() {
+    const monSelect = document.getElementById('tqMonSelect');
+    const val = (monSelect?.value || '').trim().toUpperCase();
+    if (!val) {
+      toast('Vui lòng chọn môn học cần thêm vào danh sách tiên quyết.', 'warning');
+      return;
+    }
+    if (!_selectedTqList.includes(val)) {
+      _selectedTqList.push(val);
+    }
+    renderTqTags();
+    updateTqMonOptions();
+  }
+
+  function removeMonTienQuyet(id) {
+    _selectedTqList = _selectedTqList.filter(x => x !== id);
+    renderTqTags();
+    updateTqMonOptions();
+  }
+
+  function renderTqTags() {
+    const container = document.getElementById('tqTagsContainer');
+    const countBadge = document.getElementById('tqCountBadge');
+    const hiddenInput = document.getElementById('mhMonTienQuyet');
+    if (!container) return;
+
+    if (countBadge) countBadge.textContent = `${_selectedTqList.length} môn`;
+    if (hiddenInput) hiddenInput.value = _selectedTqList.join(', ');
+
+    if (!_selectedTqList.length) {
+      container.innerHTML = '<span class="text-muted small fst-italic"><i class="bi bi-dash-circle me-1"></i>Chưa có môn tiên quyết nào (sinh viên có thể đăng ký trực tiếp).</span>';
+      return;
+    }
+
+    container.innerHTML = _selectedTqList.map(tqId => {
+      const mon = _monHocAll.find(m => (m.Id || '').trim().toUpperCase() === tqId);
+      const title = mon ? `${mon.TenMon} (${mon.SoTinChi} TC)` : tqId;
+      return `
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 d-inline-flex align-items-center">
+          <code class="fw-bold me-1 text-primary">${tqId}</code> - ${title}
+          <button type="button" class="btn-close ms-2" style="font-size: 0.6rem;" onclick="removeMonTienQuyet('${tqId}')" title="Bỏ môn này"></button>
+        </span>
+      `;
+    }).join('');
+  }
+
+  // ==========================================
+  // QUẢN LÝ CLO TRONG MODAL & TIÊU CHUẨN HUIT
+  // ==========================================
+  function addCloRow(maCLO = '', moTa = '', mucDo = 'Hiểu (Bậc 2)') {
+    const tbody = document.getElementById('cloTableBody');
+    if (!tbody) return;
+
+    if (!maCLO) {
+      const currentRows = tbody.querySelectorAll('tr').length;
+      maCLO = `CLO${currentRows + 1}`;
+    }
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <input type="text" class="form-control form-control-sm clo-maclo fw-bold" value="${maCLO}" placeholder="VD: CLO1" required />
+      </td>
+      <td>
+        <input type="text" class="form-control form-control-sm clo-mota" list="huitCloDatalist" value="${moTa.replace(/"/g, '&quot;')}" placeholder="Nhập hoặc chọn gợi ý câu mô tả CLO..." />
+      </td>
+      <td>
+        <select class="form-select form-select-sm clo-mucdo">
+          <option value="Nhớ (Bậc 1)" ${mucDo.includes('Nhớ') || mucDo.includes('1') ? 'selected' : ''}>Nhớ (Bậc 1)</option>
+          <option value="Hiểu (Bậc 2)" ${mucDo.includes('Hiểu') || mucDo.includes('2') ? 'selected' : ''}>Hiểu (Bậc 2)</option>
+          <option value="Vận dụng (Bậc 3)" ${mucDo.includes('Vận dụng (Bậc 3)') || mucDo === 'Vận dụng' ? 'selected' : ''}>Vận dụng (Bậc 3)</option>
+          <option value="Vận dụng cao (Bậc 4)" ${mucDo.includes('Vận dụng cao') || mucDo.includes('Phân tích') || mucDo.includes('4') ? 'selected' : ''}>Vận dụng cao (Bậc 4)</option>
+          <option value="Đánh giá (Bậc 5)" ${mucDo.includes('Đánh giá') || mucDo.includes('5') ? 'selected' : ''}>Đánh giá (Bậc 5)</option>
+          <option value="Sáng tạo (Bậc 6)" ${mucDo.includes('Sáng tạo') || mucDo.includes('6') ? 'selected' : ''}>Sáng tạo (Bậc 6)</option>
+        </select>
+      </td>
+      <td class="text-center">
+        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeCloRow(this)" title="Xóa CLO này"><i class="bi bi-trash"></i></button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  function removeCloRow(btn) {
+    const tr = btn.closest('tr');
+    if (tr) tr.remove();
+  }
+
+  function applyHuitPresetClos() {
+    const tbody = document.getElementById('cloTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    HUIT_CLO_CORE_PRESETS.forEach(c => {
+      addCloRow(c.MaCLO, c.MoTa, c.MucDo);
+    });
+    toast('Đã nạp bộ 4 Chuẩn đầu ra chuẩn hóa HUIT thành công!', 'success');
+  }
+
+  function getCloListFromUI() {
+    const rows = document.querySelectorAll('#cloTableBody tr');
+    const list = [];
+    rows.forEach(tr => {
+      const maCLO = tr.querySelector('.clo-maclo')?.value.trim() || '';
+      const moTa = tr.querySelector('.clo-mota')?.value.trim() || '';
+      const mucDo = tr.querySelector('.clo-mucdo')?.value.trim() || '';
+      if (maCLO) {
+        list.push({ MaCLO: maCLO, MoTa: moTa, MucDo: mucDo });
+      }
+    });
+    return list;
+  }
+
+  // ==========================================
+  // MỞ MODAL THÊM & SỬA MÔN HỌC
+  // ==========================================
+  function openCreateMonHoc() {
+    document.getElementById('mhIsEdit').value = '';
+    const idInput = document.getElementById('mhId');
+    idInput.disabled = false;
+    idInput.value = '';
+    idInput.classList.remove('is-invalid', 'is-valid');
+    document.getElementById('btnGenMhId').style.display = 'inline-block';
+    document.getElementById('mhIdFeedback').style.display = 'none';
+
+    document.getElementById('mhTenMon').value = '';
+    document.getElementById('mhMaKhoa').value = '';
+    document.getElementById('mhSoTinChi').value = '3';
+    document.getElementById('mhLyThuyet').value = '30';
+    document.getElementById('mhThucHanh').value = '30';
+
+    _selectedTqList = [];
+    renderTqTags();
+    initTqKhoaOptions();
+    updateTqMonOptions();
+
+    document.getElementById('cloTableBody').innerHTML = '';
+    applyHuitPresetClos();
+
+    // Tự động gợi ý mã môn tiếp theo
+    generateNextMhId();
+
+    clearModalError('modalMonHoc');
+    document.getElementById('mhModalTitle').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Thêm môn học mới';
+    document.getElementById('btnSubmitMonHoc').disabled = false;
+  }
+
+  async function editMonHoc(id) {
+    try {
+      const m = await api('/api/MonHoc/' + encodeURIComponent(id));
+      document.getElementById('mhIsEdit').value = m.Id;
+
+      const idInput = document.getElementById('mhId');
+      idInput.value = m.Id;
+      idInput.disabled = true;
+      idInput.classList.remove('is-invalid', 'is-valid');
+      document.getElementById('btnGenMhId').style.display = 'none';
+      document.getElementById('mhIdFeedback').style.display = 'none';
+
+      document.getElementById('mhTenMon').value = m.TenMon || '';
+      document.getElementById('mhMaKhoa').value = m.MaKhoa || '';
+      document.getElementById('mhSoTinChi').value = m.SoTinChi || 3;
+      document.getElementById('mhLyThuyet').value = m.LyThuyet ?? 0;
+      document.getElementById('mhThucHanh').value = m.ThucHanh ?? 0;
+
+      // Môn tiên quyết
+      _selectedTqList = (m.MonTienQuyet || []).map(x => x.trim().toUpperCase()).filter(Boolean);
+      renderTqTags();
+      const tqKhoa = document.getElementById('tqKhoaSelect');
+      if (tqKhoa && m.MaKhoa) tqKhoa.value = m.MaKhoa;
+      updateTqMonOptions();
+
+      // CLO
+      const cloTbody = document.getElementById('cloTableBody');
+      cloTbody.innerHTML = '';
+      if (m.CLO && m.CLO.length > 0) {
+        m.CLO.forEach(c => addCloRow(c.MaCLO, c.MoTa, c.MucDo));
+      } else {
+        applyHuitPresetClos();
+      }
+
+      clearModalError('modalMonHoc');
+      document.getElementById('mhModalTitle').innerHTML = '<i class="bi bi-pencil-square me-2"></i>Chỉnh sửa môn học &amp; Chuẩn đầu ra';
+      document.getElementById('btnSubmitMonHoc').disabled = false;
+      new bootstrap.Modal(document.getElementById('modalMonHoc')).show();
+    } catch (e) {
+      toast('Lỗi khi tải thông tin môn học: ' + e.message, 'danger');
+    }
+  }
+
+  // ==========================================
+  // LƯU & XÓA MÔN HỌC
+  // ==========================================
+  async function saveMonHoc(e) {
+    e.preventDefault();
+    clearModalError('modalMonHoc');
+
+    const isEdit = document.getElementById('mhIsEdit').value;
+    const id = document.getElementById('mhId').value.trim().toUpperCase();
+    const tenMon = document.getElementById('mhTenMon').value.trim();
+    const maKhoa = document.getElementById('mhMaKhoa').value;
+    const soTinChi = parseInt(document.getElementById('mhSoTinChi').value, 10);
+    const lyThuyet = parseInt(document.getElementById('mhLyThuyet').value, 10);
+    const thucHanh = parseInt(document.getElementById('mhThucHanh').value, 10);
+
+    if (!id) {
+      showModalError('modalMonHoc', 'Mã môn học không được để trống.');
+      document.getElementById('mhId').focus();
+      return;
+    }
+
+    // Nếu thêm mới: kiểm tra xem mã môn học có bị trùng không
+    if (!isEdit) {
+      const existing = _monHocAll.find(m => (m.Id || '').trim().toUpperCase() === id);
+      if (existing) {
+        showModalError('modalMonHoc', `Mã môn học "${id}" đã tồn tại (${existing.TenMon}). Vui lòng nhập mã khác.`);
+        document.getElementById('mhId').classList.add('is-invalid');
+        document.getElementById('mhId').focus();
+        return;
+      }
+    }
+
+    if (!tenMon) {
+      showModalError('modalMonHoc', 'Tên môn học không được để trống.');
+      document.getElementById('mhTenMon').focus();
+      return;
+    }
+
+    if (!maKhoa) {
+      showModalError('modalMonHoc', 'Vui lòng chọn khoa quản lý.');
+      document.getElementById('mhMaKhoa').focus();
+      return;
+    }
+
+    if (isNaN(soTinChi) || soTinChi <= 0) {
+      showModalError('modalMonHoc', 'Số tín chỉ phải lớn hơn 0.');
+      document.getElementById('mhSoTinChi').focus();
+      return;
+    }
+
+    if (isNaN(lyThuyet) || lyThuyet < 0) {
+      showModalError('modalMonHoc', 'Số tiết lý thuyết không được âm.');
+      document.getElementById('mhLyThuyet').focus();
+      return;
+    }
+
+    if (isNaN(thucHanh) || thucHanh < 0) {
+      showModalError('modalMonHoc', 'Số tiết thực hành không được âm.');
+      document.getElementById('mhThucHanh').focus();
+      return;
+    }
+
+    const cloList = getCloListFromUI();
+    const cloIds = cloList.map(c => c.MaCLO.toLowerCase());
+    const duplicates = cloIds.filter((item, index) => cloIds.indexOf(item) !== index);
+    if (duplicates.length > 0) {
+      showModalError('modalMonHoc', `Mã CLO "${duplicates[0].toUpperCase()}" bị trùng lặp trong môn học. Vui lòng kiểm tra lại.`);
+      return;
+    }
+
+    const body = {
+      Id: id,
+      TenMon: tenMon,
+      MaKhoa: maKhoa,
+      SoTinChi: soTinChi,
+      LyThuyet: lyThuyet,
+      ThucHanh: thucHanh,
+      MonTienQuyet: _selectedTqList,
+      CLO: cloList
+    };
+
+    try {
+      if (isEdit) {
+        await api('/api/MonHoc/' + encodeURIComponent(isEdit), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        toast(`Đã cập nhật môn học ${id} và chuẩn đầu ra thành công!`);
+      } else {
+        await api('/api/MonHoc', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        toast(`Đã thêm môn học ${id} thành công!`);
+      }
+
+      const modalEl = document.getElementById('modalMonHoc');
+      const modalObj = bootstrap.Modal.getInstance(modalEl);
+      if (modalObj) modalObj.hide();
+
+      loadMonHocPage();
+    } catch (err) {
+      showModalError('modalMonHoc', 'Lỗi khi lưu môn học: ' + err.message);
+    }
+  }
+
+  async function xoaMonHoc(id) {
+    if (!await confirmAction(`Xóa môn học "${id}"? Tất cả thông tin môn học và chuẩn đầu ra sẽ bị xóa khỏi hệ thống.`, { title: 'Xóa môn học', confirmText: 'Xóa', variant: 'danger' })) return;
+    try {
+      await api('/api/MonHoc/' + encodeURIComponent(id), { method: 'DELETE' });
+      toast(`Đã xóa môn học ${id} thành công!`, 'warning');
+      loadMonHocPage();
+    } catch (err) {
+      toast(`Không thể xóa môn học: ${err.message}`, 'danger');
+    }
+  }
+
+  // ==========================================
+  // TAB QUẢN LÝ CHUẨN ĐẦU RA (CLO HUB)
+  // ==========================================
+  function renderCloManagementTab() {
+    let allClos = [];
+    let monWithCloCount = 0;
+    let higherBloomCount = 0;
+
+    _monHocAll.forEach(m => {
+      const clos = m.CLO || [];
+      if (clos.length > 0) monWithCloCount++;
+      clos.forEach(c => {
+        allClos.push({
+          MaCLO: c.MaCLO,
+          MoTa: c.MoTa,
+          MucDo: c.MucDo,
+          MaMon: m.Id,
+          TenMon: m.TenMon,
+          SoTinChi: m.SoTinChi,
+          MaKhoa: m.MaKhoa
+        });
+        const md = (c.MucDo || '').toLowerCase();
+        if (md.includes('vận dụng') || md.includes('phân tích') || md.includes('đánh giá') || md.includes('sáng tạo') || md.includes('bậc 3') || md.includes('bậc 4') || md.includes('bậc 5') || md.includes('bậc 6')) {
+          higherBloomCount++;
+        }
+      });
+    });
+
+    // Cập nhật thống kê
+    document.getElementById('statTotalClos').textContent = allClos.length;
+    document.getElementById('statMonWithClo').textContent = monWithCloCount;
+    document.getElementById('statMonWithoutClo').textContent = _monHocAll.length - monWithCloCount;
+    document.getElementById('statHigherBloom').textContent = higherBloomCount;
+    document.getElementById('badgeTotalClos').textContent = allClos.length;
+
+    // Cập nhật dropdown môn học trong tab CLO
+    const cloMonSelect = document.getElementById('cloFilterMon');
+    if (cloMonSelect) {
+      let monHtml = '<option value="">Tất cả môn học</option>';
+      _monHocAll.forEach(m => {
+        monHtml += `<option value="${m.Id}">${m.Id} - ${m.TenMon}</option>`;
+      });
+      cloMonSelect.innerHTML = monHtml;
+    }
+
+    filterCloTable();
+  }
+
+  function filterCloTable() {
+    const q = (document.getElementById('cloSearchText')?.value || '').toLowerCase().trim();
+    const maKhoa = document.getElementById('cloFilterKhoa')?.value || '';
+    const maMon = document.getElementById('cloFilterMon')?.value || '';
+    const mucDo = document.getElementById('cloFilterMucDo')?.value || '';
+
+    let allClos = [];
+    _monHocAll.forEach(m => {
+      (m.CLO || []).forEach(c => {
+        allClos.push({
+          MaCLO: c.MaCLO,
+          MoTa: c.MoTa,
+          MucDo: c.MucDo,
+          MaMon: m.Id,
+          TenMon: m.TenMon,
+          SoTinChi: m.SoTinChi,
+          MaKhoa: m.MaKhoa
+        });
+      });
+    });
+
+    const filtered = allClos.filter(c => {
+      const matchQ = !q || (c.MaCLO || '').toLowerCase().includes(q) || (c.MoTa || '').toLowerCase().includes(q) || (c.TenMon || '').toLowerCase().includes(q);
+      const matchKhoa = !maKhoa || c.MaKhoa === maKhoa;
+      const matchMon = !maMon || c.MaMon === maMon;
+      const matchMucDo = !mucDo || (c.MucDo || '').toLowerCase().includes(mucDo.toLowerCase());
+      return matchQ && matchKhoa && matchMon && matchMucDo;
+    });
+
+    const countBadge = document.getElementById('cloFilteredCount');
+    if (countBadge) countBadge.textContent = `${filtered.length} chuẩn đầu ra`;
+
+    const tbody = document.getElementById('cloMasterTable');
+    if (!tbody) return;
+
+    if (!filtered.length) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted"><i class="bi bi-info-circle me-1"></i>Không có chuẩn đầu ra nào phù hợp với bộ lọc.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(c => {
+      const khoaName = _khoaMap[c.MaKhoa] || c.MaKhoa;
+      return `
+        <tr>
+          <td><span class="badge ${getBloomBadgeClass(c.MucDo)} fs-6">${c.MaCLO}</span></td>
+          <td>
+            <div class="fw-semibold">${c.TenMon}</div>
+            <code class="text-primary small">${c.MaMon}</code> · <span class="badge bg-light text-dark border">${c.SoTinChi} TC</span>
+          </td>
+          <td><span class="badge bg-light text-dark border">${khoaName}</span></td>
+          <td><div class="text-wrap">${c.MoTa || '<i class="text-muted">Chưa có mô tả chi tiết</i>'}</div></td>
+          <td class="text-center">
+            <span class="badge ${getBloomBadgeClass(c.MucDo)} px-2 py-1">${c.MucDo || 'Chưa phân bậc'}</span>
+          </td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-primary" onclick="editMonHoc('${c.MaMon}')" title="Chỉnh sửa CLO của môn này">
+              <i class="bi bi-pencil me-1"></i>Sửa
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // ==========================================
+  // TAB NGÂN HÀNG CLO HUIT MẪU
+  // ==========================================
+  function renderHuitBankCards() {
+    const container = document.getElementById('huitCloBankCards');
+    if (!container) return;
+
+    container.innerHTML = HUIT_CLO_CATEGORIES.map(cat => {
+      const itemsHtml = cat.items.map(item => `
+        <li class="list-group-item d-flex justify-content-between align-items-start py-2">
+          <div class="ms-2 me-auto">
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <span class="badge ${getBloomBadgeClass(item.level)}">${item.code}</span>
+              <span class="badge bg-light text-dark border small">${item.level}</span>
+            </div>
+            <div class="small text-secondary">${item.desc}</div>
+          </div>
+          <button class="btn btn-sm btn-outline-secondary ms-2 text-nowrap" onclick="copyCloText('${item.desc.replace(/'/g, "\\'")}')" title="Sao chép nội dung chuẩn này">
+            <i class="bi bi-clipboard"></i>
+          </button>
+        </li>
+      `).join('');
+
+      return `
+        <div class="col-md-6">
+          <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-white py-3 border-bottom">
+              <div class="d-flex align-items-center">
+                <div class="p-2 bg-${cat.color}-subtle text-${cat.color} rounded me-2">
+                  <i class="bi ${cat.icon} fs-5"></i>
+                </div>
+                <div>
+                  <h6 class="mb-0 fw-bold">${cat.title}</h6>
+                  <small class="text-muted">${cat.description}</small>
+                </div>
+              </div>
+            </div>
+            <ul class="list-group list-group-flush">
+              ${itemsHtml}
+            </ul>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function copyCloText(text) {
+    navigator.clipboard.writeText(text).then(() => {
+      toast('Đã sao chép nội dung CLO vào bộ nhớ tạm!', 'success');
+    }).catch(() => {
+      toast('Không thể sao chép tự động, vui lòng chọn và copy thủ công.', 'warning');
+    });
+  }
+
+  // ==========================================
+  // MODAL CÂY TIÊN QUYẾT ($graphLookup)
+  // ==========================================
+  async function openCayTienQuyet(id, tenMon) {
+    const modalEl = document.getElementById('modalCayTienQuyet');
+    if (!modalEl) return;
+    document.getElementById('cayTienQuyetMonGoc').textContent = `${tenMon} (${id})`;
+    document.getElementById('cayTienQuyetMoTa').textContent = 'Truy vấn đệ quy cây phụ thuộc bằng toán tử MongoDB $graphLookup';
+    const tbody = document.getElementById('cayTienQuyetBody');
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Đang tải cây môn học tiên quyết...</td></tr>';
+
+    new bootstrap.Modal(modalEl).show();
+
+    try {
+      const res = await api(`/api/MonHoc/${encodeURIComponent(id)}/caytienquyet`);
+      const list = res.TatCaMonTienQuyet || [];
+      if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted"><i class="bi bi-check-circle text-success me-1"></i>Môn này là môn cơ sở/nhập môn, không có môn học tiên quyết nào.</td></tr>';
+        return;
+      }
+
+      list.sort((a, b) => (a.BacTienQuyet || 0) - (b.BacTienQuyet || 0));
+
+      tbody.innerHTML = list.map(m => {
+        const bac = (m.BacTienQuyet ?? 0) + 1;
+        const bacBadge = bac === 1
+          ? '<span class="badge bg-danger">Bậc 1 (Trực tiếp)</span>'
+          : `<span class="badge bg-warning text-dark">Bậc ${bac} (Gián tiếp)</span>`;
+        const tq = (m.MonTienQuyet || []).join(', ') || '—';
+        return `<tr>
+          <td>${bacBadge}</td>
+          <td><code class="fw-semibold">${m._id || m.Id}</code></td>
+          <td class="fw-semibold">${m.TenMon || ''}</td>
+          <td class="text-center"><span class="badge bg-info-subtle text-info-emphasis border">${m.SoTinChi || 0} TC</span></td>
+          <td><small class="text-muted">${tq}</small></td>
+        </tr>`;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-3">Lỗi: ${err.message}</td></tr>`;
+    }
+  }
+
+  loadMonHocPage();
+</script>
 </body>
 </html>
-
