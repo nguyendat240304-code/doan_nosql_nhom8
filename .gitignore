@@ -28,6 +28,13 @@ patch_temp/
 secrets.json
 secrets.*.json
 appsettings.*.local.json
+*.pem
+*.key
+*.pub
+*token*
+*secret*
+id_rsa*
+oci_api_key*
 
 # Logs and coverage output
 *.log
