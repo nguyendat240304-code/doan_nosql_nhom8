@@ -59,7 +59,19 @@ function cleanupModalBackdrop() {
   document.body.style.paddingRight = '';
 }
 
-// Global modal watchdog to ensure no orphan black backdrop ever gets stuck
+// Global modal watchdog to ensure no orphan black backdrop ever gets stuck and nested backdrops stack properly
+document.addEventListener('show.bs.modal', function (event) {
+  const modal = event.target;
+  const zIndex = parseInt(window.getComputedStyle(modal).zIndex) || 1055;
+  setTimeout(() => {
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    if (backdrops.length > 0) {
+      const lastBackdrop = backdrops[backdrops.length - 1];
+      lastBackdrop.style.zIndex = (zIndex - 5);
+    }
+  }, 10);
+});
+
 document.addEventListener('hidden.bs.modal', function () {
   setTimeout(() => {
     const openModals = document.querySelectorAll('.modal.show');
@@ -70,6 +82,11 @@ document.addEventListener('hidden.bs.modal', function () {
       const backdrops = document.querySelectorAll('.modal-backdrop');
       while (backdrops.length > openModals.length) {
         backdrops[backdrops.length - 1].remove();
+      }
+      if (backdrops.length > 0) {
+        const topModal = openModals[openModals.length - 1];
+        const topZ = parseInt(window.getComputedStyle(topModal).zIndex) || 1055;
+        backdrops[backdrops.length - 1].style.zIndex = (topZ - 5);
       }
     }
   }, 50);
@@ -1606,7 +1623,6 @@ async function submitEditDiemModal(e) {
     const editModal = bootstrap.Modal.getInstance(document.getElementById('modalEditDiem'));
     if (editModal) editModal.hide();
     document.getElementById('modalEditDiem').addEventListener('hidden.bs.modal', () => {
-      cleanupModalBackdrop();
       openChiTietDiem(svId);
     }, { once: true });
     toast(`Đã cập nhật điểm môn ${maLhp}.`);

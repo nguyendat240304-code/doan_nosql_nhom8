@@ -537,7 +537,7 @@ body {
 }
 
 /* Multi-modal stacking and backdrop fixes */
-#confirmActionModal { z-index: 1070 !important; }
-#modalEditDiem, #modalLichSuDiem, #modalPushDiem { z-index: 1060 !important; }
-#modalChiTietDiem { z-index: 1050 !important; }
+#modalChiTietDiem { z-index: 1055 !important; }
+#modalEditDiem, #modalLichSuDiem, #modalPushDiem { z-index: 1070 !important; }
+#confirmActionModal { z-index: 1085 !important; }
 
