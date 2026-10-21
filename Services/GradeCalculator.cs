@@ -53,20 +53,6 @@ public static class GradeCalculator
         _ => "F"
     };
 
-    /// <summary>Quy đổi điểm tổng kết hệ 10 sang hệ 4 theo tiêu chuẩn tín chỉ HUIT.</summary>
-    public static double? ScoreToScale4(double? score) => score switch
-    {
-        null => null,
-        >= 8.5 => 4.0, // A, A+
-        >= 8.0 => 3.5, // B+
-        >= 7.0 => 3.0, // B
-        >= 6.5 => 2.5, // C+
-        >= 5.5 => 2.0, // C
-        >= 5.0 => 1.5, // D+
-        >= 4.0 => 1.0, // D
-        _ => 0.0       // F
-    };
-
     public static string ScoreStatus(DiemThanhPhan? scores) =>
         HasAnyScore(scores) ? "Chưa hoàn tất điểm" : "Chưa có điểm";
 
@@ -107,11 +93,11 @@ public static class GradeCalculator
         });
     }
 
-    public static string TinhCanhBaoHocVu(double gpaScale4, int soMonNo)
+    public static string TinhCanhBaoHocVu(double gpa, int soMonNo)
     {
-        if ((gpaScale4 > 0 && gpaScale4 < 1.0) || soMonNo >= 3)
+        if (gpa > 0 && gpa < 1.0 || soMonNo >= 3)
             return "Cảnh báo học vụ Mức 2 (Nguy cơ đình chỉ)";
-        if ((gpaScale4 > 0 && gpaScale4 < 2.0) || soMonNo >= 2)
+        if (gpa > 0 && gpa < 2.0 || soMonNo >= 2)
             return "Cảnh báo học vụ Mức 1";
         return "Bình thường";
     }

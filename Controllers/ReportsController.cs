@@ -250,14 +250,12 @@ public class ReportsController : ControllerBase
             var monCoDiem = sv.BangDiem.Where(b => b.DiemTongKet.HasValue && b.SoTinChi > 0).ToList();
             if (!monCoDiem.Any()) continue;
 
-            double tongDiemHeSo10 = monCoDiem.Sum(b => b.DiemTongKet!.Value * b.SoTinChi);
-            double tongDiemHeSo4 = monCoDiem.Sum(b => (GradeCalculator.ScoreToScale4(b.DiemTongKet) ?? 0.0) * b.SoTinChi);
+            double tongDiemHeSo = monCoDiem.Sum(b => b.DiemTongKet!.Value * b.SoTinChi);
             int tongTinChi = monCoDiem.Sum(b => b.SoTinChi);
-            double gpa = tongTinChi > 0 ? Math.Round(tongDiemHeSo10 / tongTinChi, 2) : 0;
-            double gpa4 = tongTinChi > 0 ? Math.Round(tongDiemHeSo4 / tongTinChi, 2) : 0;
+            double gpa = tongTinChi > 0 ? Math.Round(tongDiemHeSo / tongTinChi, 2) : 0;
             int soMonNo = monCoDiem.Count(b => b.DiemTongKet!.Value < 4.0);
 
-            var mucCanhBao = GradeCalculator.TinhCanhBaoHocVu(gpa4, soMonNo);
+            var mucCanhBao = GradeCalculator.TinhCanhBaoHocVu(gpa, soMonNo);
             if (mucCanhBao != "Bình thường")
             {
                 int mucDoNum = mucCanhBao.Contains("2") ? 2 : 1;
@@ -269,7 +267,6 @@ public class ReportsController : ControllerBase
                     HoTen = sv.HoTen,
                     LopSinhHoat = sv.LopSinhHoat,
                     GPA = gpa,
-                    GPA4 = gpa4,
                     SoMonNo = soMonNo,
                     MucCanhBao = mucCanhBao,
                     CacMonNo = monNoList,
@@ -277,11 +274,10 @@ public class ReportsController : ControllerBase
                     canhBao = new
                     {
                         GpaHienTai = gpa,
-                        GpaHe4 = gpa4,
                         SoMonNo = soMonNo,
                         MucDo = mucDoNum,
                         MucCanhBao = mucCanhBao,
-                        LyDo = mucDoNum == 2 ? "GPA hệ 4 < 1.0 hoặc nợ từ 3 môn trở lên" : "GPA hệ 4 < 2.0 hoặc nợ từ 2 môn trở lên",
+                        LyDo = mucDoNum == 2 ? "GPA < 1.0 hoặc nợ từ 3 môn trở lên" : "GPA < 2.0 hoặc nợ từ 2 môn trở lên",
                         CacMonChuaDat = monNoList
                     }
                 });

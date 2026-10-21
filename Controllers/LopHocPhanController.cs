@@ -45,10 +45,11 @@ public class LopHocPhanController : ControllerBase
         foreach (var lhp in classes)
         {
             var actual = counts.GetValueOrDefault(lhp.Id);
+            if (lhp.SiSoHienTai == actual) continue;
             var result = await _db.LopHocPhans.UpdateOneAsync(
-                Builders<LopHocPhan>.Filter.Eq(x => x.Id, lhp.Id),
+                x => x.Id == lhp.Id && x.SiSoHienTai == lhp.SiSoHienTai,
                 Builders<LopHocPhan>.Update.Set(x => x.SiSoHienTai, actual));
-            if (lhp.SiSoHienTai != actual || result.ModifiedCount > 0)
+            if (result.ModifiedCount > 0)
                 changed.Add(new { lhp.Id, SiSoCu = lhp.SiSoHienTai, SiSoMoi = actual });
         }
         return Ok(new { updated = changed.Count, classes = changed, message = "Đã đồng bộ sĩ số theo số sinh viên có đăng ký." });
@@ -106,32 +107,26 @@ public class LopHocPhanController : ControllerBase
             filter &= Builders<LopHocPhan>.Filter.Eq(x => x.MaMon, maMon.Trim());
 
         var list = await _db.LopHocPhans.Find(filter).ToListAsync();
-        var counts = await _db.GetEnrollmentCountsAsync();
 
         var monHocs = await _db.MonHocs.Find(Builders<MonHoc>.Filter.Empty).ToListAsync();
         var monHocTinChiMap = monHocs.ToDictionary(m => m.Id, m => m.SoTinChi);
 
-        var result = list.Select(l =>
+        var result = list.Select(l => new
         {
-            var actualCount = counts.GetValueOrDefault(l.Id, 0);
-            var currentSiso = l.SiSoHienTai > 0 ? l.SiSoHienTai : actualCount;
-            return new
-            {
-                l.Id,
-                l.MaMon,
-                l.TenMon,
-                SoTinChi = l.SoTinChi > 0 ? l.SoTinChi : (monHocTinChiMap.TryGetValue(l.MaMon, out var tc) ? tc : 3),
-                l.Hocky,
-                l.NamHoc,
-                l.GiangVien,
-                l.PhongHoc,
-                l.LichHoc,
-                l.SiSoToiDa,
-                l.DaMo,
-                l.ChoPhepGvNhapSuaDiem,
-                SiSoHienTai = currentSiso,
-                ConCho = Math.Max(0, l.SiSoToiDa - currentSiso)
-            };
+            l.Id,
+            l.MaMon,
+            l.TenMon,
+            SoTinChi = l.SoTinChi > 0 ? l.SoTinChi : (monHocTinChiMap.TryGetValue(l.MaMon, out var tc) ? tc : 3),
+            l.Hocky,
+            l.NamHoc,
+            l.GiangVien,
+            l.PhongHoc,
+            l.LichHoc,
+            l.SiSoToiDa,
+            l.DaMo,
+            l.ChoPhepGvNhapSuaDiem,
+            l.SiSoHienTai,
+            ConCho = l.SiSoToiDa - l.SiSoHienTai
         }).ToList();
 
         return Ok(result);
@@ -156,14 +151,6 @@ public class LopHocPhanController : ControllerBase
         var mon = await _db.MonHocs.Find(m => m.Id == item.MaMon).FirstOrDefaultAsync();
         int soTinChi = item.SoTinChi > 0 ? item.SoTinChi : (mon?.SoTinChi ?? 3);
 
-        var actualCount = item.SiSoHienTai;
-        if (actualCount == 0)
-        {
-            var registeredCount = await _db.SinhViens.CountDocumentsAsync(
-                x => x.BangDiem.Any(b => b.MaLHP == id));
-            if (registeredCount > 0) actualCount = (int)registeredCount;
-        }
-
         return Ok(new
         {
             item.Id,
@@ -178,8 +165,8 @@ public class LopHocPhanController : ControllerBase
             item.SiSoToiDa,
             item.DaMo,
             item.ChoPhepGvNhapSuaDiem,
-            SiSoHienTai = actualCount,
-            ConCho = Math.Max(0, item.SiSoToiDa - actualCount)
+            item.SiSoHienTai,
+            ConCho = item.SiSoToiDa - item.SiSoHienTai
         });
     }
 

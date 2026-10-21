@@ -1,4 +1,4 @@
-using doan_cuoiky_nosql.Models;
+﻿using doan_cuoiky_nosql.Models;
 using doan_cuoiky_nosql.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Caching.Memory;
@@ -20,6 +20,7 @@ builder.Services.AddControllers()
         o.JsonSerializerOptions.PropertyNamingPolicy = null;
         o.JsonSerializerOptions.WriteIndented = false;
     });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSingleton<MongoDbService>();
 builder.Services.AddMemoryCache();
@@ -55,7 +56,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
                 if (string.IsNullOrEmpty(username))
                 {
-                    context.Fail("Tài khoản bị vô hiệu hóa");
+                    context.Fail("TÃ i khoáº£n bá»‹ vÃ´ hiá»‡u hÃ³a");
                     return;
                 }
 
@@ -75,13 +76,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
                 if (dbUser == null || !dbUser.IsActive)
                 {
-                    context.Fail("Tài khoản bị vô hiệu hóa");
+                    context.Fail("TÃ i khoáº£n bá»‹ vÃ´ hiá»‡u hÃ³a");
                     return;
                 }
 
                 if (!string.Equals(dbUser.Role, tokenRole, StringComparison.OrdinalIgnoreCase))
                 {
-                    context.Fail("Tài khoản bị vô hiệu hóa");
+                    context.Fail("TÃ i khoáº£n bá»‹ vÃ´ hiá»‡u hÃ³a");
                     return;
                 }
             }
@@ -92,6 +93,8 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+
+
 app.UseCors();
 app.UseDefaultFiles();
 app.UseStaticFiles();
@@ -100,13 +103,13 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapFallbackToFile("index.html");
 
-// Đồng bộ giảng viên trong BangDiem khi server khởi động
+// Äá»“ng bá»™ giáº£ng viÃªn trong BangDiem khi server khá»Ÿi Ä‘á»™ng
 await app.Services.GetRequiredService<MongoDbService>().InitializeIndexesAndEnrollmentCountsAsync();
 await SyncGiangVienInBangDiem(app.Services);
 
 app.Run();
 
-// ======= HÀM ĐỒNG BỘ GIẢNG VIÊN =======
+// ======= HÃ€M Äá»’NG Bá»˜ GIáº¢NG VIÃŠN =======
 static async Task SyncGiangVienInBangDiem(IServiceProvider services)
 {
     try
@@ -137,10 +140,10 @@ static async Task SyncGiangVienInBangDiem(IServiceProvider services)
             if (result.ModifiedCount > 0) updated++;
         }
 
-        Console.WriteLine($"[SYNC] Đồng bộ giảng viên hoàn tất: {updated}/{allLhp.Count} lớp học phần đã cập nhật.");
+        Console.WriteLine($"[SYNC] Äá»“ng bá»™ giáº£ng viÃªn hoÃ n táº¥t: {updated}/{allLhp.Count} lá»›p há»c pháº§n Ä‘Ã£ cáº­p nháº­t.");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"[SYNC] Lỗi đồng bộ giảng viên: {ex.Message}");
+        Console.WriteLine($"[SYNC] Lá»—i Ä‘á»“ng bá»™ giáº£ng viÃªn: {ex.Message}");
     }
 }
