@@ -306,7 +306,7 @@
             </label>
             
             <div class="card p-2 bg-light border mb-2">
-              <div class="row g-2 align-items-center">
+              <div class="row g-2 align-items-end">
                 <div class="col-md-4">
                   <label class="small text-muted mb-1 fw-semibold">1. Lọc theo Khoa:</label>
                   <select id="tqKhoaSelect" class="form-select form-select-sm" onchange="updateTqMonOptions()">
@@ -315,11 +315,17 @@
                 </div>
                 <div class="col-md-6">
                   <label class="small text-muted mb-1 fw-semibold">2. Chọn môn tiên quyết:</label>
-                  <select id="tqMonSelect" class="form-select form-select-sm">
-                    <option value="">-- Chọn môn học --</option>
-                  </select>
+                  <div class="input-group input-group-sm">
+                    <input id="tqMonInput" class="form-control form-control-sm" list="tqMonDatalist" placeholder="Nhập mã/tên môn hoặc bấm ▼ để chọn..." onkeydown="if(event.key==='Enter'){event.preventDefault();addMonTienQuyetFromSelect();}" />
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" title="Xem danh sách môn học">
+                      <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow" id="tqMonDropdownMenu" style="max-height: 250px; overflow-y: auto;">
+                    </ul>
+                  </div>
+                  <datalist id="tqMonDatalist"></datalist>
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
+                <div class="col-md-2">
                   <button type="button" class="btn btn-sm btn-primary w-100" onclick="addMonTienQuyetFromSelect()" title="Thêm môn đã chọn vào danh sách tiên quyết">
                     <i class="bi bi-plus-lg me-1"></i>Thêm
                   </button>
@@ -344,11 +350,11 @@
           <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
             <h6 class="mb-0 fw-bold text-primary"><i class="bi bi-list-check me-1"></i>Danh sách Chuẩn đầu ra (CLO)</h6>
             <div class="d-flex gap-2 flex-wrap">
-              <button type="button" class="btn btn-sm btn-outline-success" onclick="applyHuitPresetClos()" title="Tự động nạp bộ 4 Chuẩn đầu ra HUIT chuẩn hóa">
-                <i class="bi bi-mortarboard-fill me-1"></i>Nạp bộ CLO HUIT mẫu (4 CĐR)
+              <button type="button" class="btn btn-sm btn-outline-success" onclick="applyHuitPresetClos()" title="Tự động nạp bộ 4 Chuẩn đầu ra cơ bản">
+                <i class="bi bi-mortarboard-fill me-1"></i>Nạp bộ CLO cơ bản
               </button>
               <button type="button" class="btn btn-sm btn-outline-primary" onclick="addCloRow()">
-                <i class="bi bi-plus-circle me-1"></i>Thêm dòng CLO
+                <i class="bi bi-plus-circle me-1"></i>Thêm chuẩn đầu ra
               </button>
             </div>
           </div>
@@ -367,7 +373,6 @@
               </tbody>
             </table>
           </div>
-          <small class="text-muted"><i class="bi bi-lightbulb me-1"></i>Bạn có thể gõ hoặc chọn gợi ý câu mô tả CLO chuẩn HUIT từ danh sách xổ xuống của ô mô tả.</small>
         </div>
       </div>
 
@@ -719,9 +724,8 @@
 
   function updateTqMonOptions() {
     const selKhoa = document.getElementById('tqKhoaSelect')?.value || '';
-    const monSelect = document.getElementById('tqMonSelect');
-    if (!monSelect) return;
-
+    const datalist = document.getElementById('tqMonDatalist');
+    const dropdownMenu = document.getElementById('tqMonDropdownMenu');
     const currentId = (document.getElementById('mhId')?.value || '').trim().toUpperCase();
 
     const available = _monHocAll.filter(m => {
@@ -732,30 +736,72 @@
       return true;
     });
 
-    if (!available.length) {
-      monSelect.innerHTML = '<option value="">-- Không có môn học nào phù hợp --</option>';
-      monSelect.disabled = true;
-      return;
+    if (datalist) {
+      datalist.innerHTML = available.map(m => 
+        `<option value="${m.Id} - ${m.TenMon} (${m.SoTinChi} TC)"></option>`
+      ).join('');
     }
 
-    monSelect.disabled = false;
-    let html = `<option value="">-- Chọn môn học (${available.length} môn) --</option>`;
-    available.forEach(m => {
-      html += `<option value="${m.Id}">${m.Id} - ${m.TenMon} (${m.SoTinChi} TC)</option>`;
-    });
-    monSelect.innerHTML = html;
+    if (dropdownMenu) {
+      if (!available.length) {
+        dropdownMenu.innerHTML = '<li><span class="dropdown-item text-muted small fst-italic">Không có môn học phù hợp</span></li>';
+      } else {
+        dropdownMenu.innerHTML = available.map(m => `
+          <li>
+            <a class="dropdown-item small py-1" href="javascript:void(0)" onclick="selectTqMonFromDropdown('${m.Id}')">
+              <strong class="text-primary">${m.Id}</strong> - ${m.TenMon} <span class="badge bg-light text-dark border ms-1">${m.SoTinChi} TC</span>
+            </a>
+          </li>
+        `).join('');
+      }
+    }
+  }
+
+  function selectTqMonFromDropdown(mId) {
+    const mon = _monHocAll.find(m => m.Id === mId);
+    const input = document.getElementById('tqMonInput');
+    if (input && mon) {
+      input.value = `${mon.Id} - ${mon.TenMon} (${mon.SoTinChi} TC)`;
+      addMonTienQuyetFromSelect();
+    }
   }
 
   function addMonTienQuyetFromSelect() {
-    const monSelect = document.getElementById('tqMonSelect');
-    const val = (monSelect?.value || '').trim().toUpperCase();
-    if (!val) {
-      toast('Vui lòng chọn môn học cần thêm vào danh sách tiên quyết.', 'warning');
+    const input = document.getElementById('tqMonInput');
+    const rawVal = (input?.value || '').trim();
+    if (!rawVal) {
+      toast('Vui lòng nhập mã/tên hoặc bấm mũi tên ▼ để chọn môn tiên quyết.', 'warning');
       return;
     }
-    if (!_selectedTqList.includes(val)) {
-      _selectedTqList.push(val);
+
+    const cleanId = rawVal.split(/[\s-]/)[0].trim().toUpperCase();
+    const matched = _monHocAll.find(m => 
+      m.Id.toUpperCase() === cleanId || 
+      m.Id.toUpperCase() === rawVal.toUpperCase() ||
+      rawVal.toUpperCase().startsWith(m.Id.toUpperCase() + ' ') ||
+      rawVal.toUpperCase().startsWith(m.Id.toUpperCase() + '-') ||
+      m.TenMon.toLowerCase() === rawVal.toLowerCase()
+    );
+
+    if (!matched) {
+      toast(`Không tìm thấy môn học hợp lệ từ "${rawVal}". Vui lòng kiểm tra lại.`, 'warning');
+      return;
     }
+
+    const currentId = (document.getElementById('mhId')?.value || '').trim().toUpperCase();
+    if (matched.Id.toUpperCase() === currentId) {
+      toast('Môn học không thể là môn tiên quyết của chính nó.', 'warning');
+      return;
+    }
+
+    if (_selectedTqList.includes(matched.Id.toUpperCase())) {
+      toast(`Môn ${matched.Id} đã có trong danh sách tiên quyết.`, 'info');
+      if (input) input.value = '';
+      return;
+    }
+
+    _selectedTqList.push(matched.Id.toUpperCase());
+    if (input) input.value = '';
     renderTqTags();
     updateTqMonOptions();
   }
@@ -841,7 +887,7 @@
     HUIT_CLO_CORE_PRESETS.forEach(c => {
       addCloRow(c.MaCLO, c.MoTa, c.MucDo);
     });
-    toast('Đã nạp bộ 4 Chuẩn đầu ra chuẩn hóa HUIT thành công!', 'success');
+    toast('Đã nạp bộ 4 Chuẩn đầu ra cơ bản thành công!', 'success');
   }
 
   function getCloListFromUI() {
