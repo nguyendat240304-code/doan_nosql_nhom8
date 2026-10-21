@@ -1870,6 +1870,33 @@ function updateDiemSortIcons() {
   });
 }
 
+// Hàm so sánh tên theo TÊN RIÊNG (từ cuối cùng trong họ và tên người Việt)
+function compareVietnameseNames(fullNameA, fullNameB) {
+  const strA = (fullNameA || '').trim();
+  const strB = (fullNameB || '').trim();
+  if (!strA && !strB) return 0;
+  if (!strA) return 1;
+  if (!strB) return -1;
+
+  const partsA = strA.split(/\s+/);
+  const partsB = strB.split(/\s+/);
+
+  const tenA = partsA[partsA.length - 1];
+  const tenB = partsB[partsB.length - 1];
+
+  // 1. So sánh tên riêng trước
+  const cmpTen = tenA.localeCompare(tenB, 'vi');
+  if (cmpTen !== 0) return cmpTen;
+
+  // 2. Nếu tên riêng trùng nhau, so sánh Họ và tên đệm
+  const hoDemA = partsA.slice(0, -1).join(' ');
+  const hoDemB = partsB.slice(0, -1).join(' ');
+  const cmpHoDem = hoDemA.localeCompare(hoDemB, 'vi');
+  if (cmpHoDem !== 0) return cmpHoDem;
+
+  return strA.localeCompare(strB, 'vi');
+}
+
 function filterDiemTable() {
   clearTimeout(_diemSearchTimer);
   _diemSearchTimer = setTimeout(() => {
@@ -1908,14 +1935,12 @@ function renderDiemSvTable(list) {
       const bLop = String(b.LopSinhHoat || '');
       res = _diemSortAsc ? aLop.localeCompare(bLop, 'vi') : bLop.localeCompare(aLop, 'vi');
     } else {
-      // HoTen
-      const aName = String(a.HoTen || '');
-      const bName = String(b.HoTen || '');
-      res = _diemSortAsc ? aName.localeCompare(bName, 'vi') : bName.localeCompare(aName, 'vi');
+      // HoTen: sắp xếp theo TÊN RIÊNG
+      res = _diemSortAsc ? compareVietnameseNames(a.HoTen, b.HoTen) : compareVietnameseNames(b.HoTen, a.HoTen);
     }
 
     if (res !== 0) return res;
-    return String(a.HoTen || '').localeCompare(String(b.HoTen || ''), 'vi');
+    return compareVietnameseNames(a.HoTen, b.HoTen);
   });
 
   const size = _diemPageSize;
@@ -2191,14 +2216,12 @@ function applyBaoCaoSortAndRender() {
       const bLop = String(b.LopSinhHoat || '');
       res = _baoCaoSortAsc ? aLop.localeCompare(bLop, 'vi') : bLop.localeCompare(aLop, 'vi');
     } else {
-      // HoTen
-      const aName = String(a.HoTen || '');
-      const bName = String(b.HoTen || '');
-      res = _baoCaoSortAsc ? aName.localeCompare(bName, 'vi') : bName.localeCompare(aName, 'vi');
+      // HoTen: sắp xếp theo TÊN RIÊNG
+      res = _baoCaoSortAsc ? compareVietnameseNames(a.HoTen, b.HoTen) : compareVietnameseNames(b.HoTen, a.HoTen);
     }
 
     if (res !== 0) return res;
-    return String(a.HoTen || '').localeCompare(String(b.HoTen || ''), 'vi');
+    return compareVietnameseNames(a.HoTen, b.HoTen);
   });
 
   renderBaoCaoTableBody(sorted);

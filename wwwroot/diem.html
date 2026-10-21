@@ -147,35 +147,55 @@
       <!-- Filter / Tra cứu -->
       <div class="card mb-3 border-0 shadow-sm">
         <div class="card-body py-2">
-          <div class="row g-2 align-items-center">
-            <div class="col-md-3">
-              <label class="form-label small fw-semibold mb-1">Lọc theo Lớp học phần</label>
-              <div class="position-relative">
-                <input id="diemLopSearch" class="form-control form-control-sm mb-1" placeholder="Nhập mã hoặc tên lớp..." oninput="filterDiemLopOptions()" />
+          <div class="row g-3 align-items-center">
+            <!-- Cột trái: Lọc theo Lớp học phần -->
+            <div class="col-lg-5 col-md-6">
+              <label class="form-label small fw-semibold mb-1 text-primary">
+                <i class="bi bi-funnel me-1"></i>Lọc theo Lớp học phần
+              </label>
+              <div>
+                <input id="diemLopSearch" class="form-control form-control-sm mb-2" placeholder="Nhập mã hoặc tên lớp..." oninput="filterDiemLopOptions()" />
                 <select id="diemFilterLop" class="form-select form-select-sm" onchange="loadDiemSvList()">
                   <option value="">Tất cả lớp học phần</option>
                 </select>
               </div>
             </div>
-            <div class="col-md-3">
-              <label class="form-label small fw-semibold mb-1"><i class="bi bi-arrow-down-up me-1"></i>Sắp xếp</label>
-              <select id="diemSortSelect" class="form-select form-select-sm" onchange="onDiemSortSelectChange(this.value)">
-                <option value="gpa_desc">🏆 GPA cao nhất → thấp nhất</option>
-                <option value="gpa_asc">📉 GPA thấp nhất → cao nhất</option>
-                <option value="hoten_asc">🔤 Họ tên A → Z</option>
-                <option value="hoten_desc">🔤 Họ tên Z → A</option>
-                <option value="mssv_asc">🆔 MSSV tăng dần</option>
-                <option value="mssv_desc">🆔 MSSV giảm dần</option>
-                <option value="lop_asc">🏫 Lớp A → Z</option>
-                <option value="xeploai_desc">🎖️ Xếp loại cao → thấp</option>
-              </select>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label small fw-semibold mb-1">Tìm theo tên hoặc MSSV</label>
-              <input id="diemSearchText" class="form-control form-control-sm" placeholder="Nhập tên hoặc MSSV..." oninput="filterDiemTable()" />
-            </div>
-            <div class="col-md-3 text-md-end">
-              <span id="diemSvCount" class="badge bg-secondary p-2"></span>
+
+            <!-- Cột phải: Tìm theo tên/MSSV và Sắp xếp (Chữ bên trái, ô thực thi bên phải ngang hàng với 2 ô bên trái) -->
+            <div class="col-lg-7 col-md-6">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small fw-semibold text-primary"><i class="bi bi-sliders me-1"></i>Bộ lọc &amp; Sắp xếp danh sách</span>
+                <span id="diemSvCount" class="badge bg-secondary"></span>
+              </div>
+              
+              <!-- Hàng 1: Tìm theo tên hoặc MSSV -->
+              <div class="row g-2 align-items-center mb-2">
+                <label for="diemSearchText" class="col-sm-4 col-form-label col-form-label-sm fw-semibold text-sm-end text-start mb-0">
+                  Tìm theo tên hoặc MSSV
+                </label>
+                <div class="col-sm-8">
+                  <input id="diemSearchText" class="form-control form-control-sm" placeholder="Nhập tên hoặc MSSV..." oninput="filterDiemTable()" />
+                </div>
+              </div>
+
+              <!-- Hàng 2: Sắp xếp -->
+              <div class="row g-2 align-items-center">
+                <label for="diemSortSelect" class="col-sm-4 col-form-label col-form-label-sm fw-semibold text-sm-end text-start mb-0">
+                  Sắp xếp
+                </label>
+                <div class="col-sm-8">
+                  <select id="diemSortSelect" class="form-select form-select-sm" onchange="onDiemSortSelectChange(this.value)">
+                    <option value="gpa_desc">GPA cao nhất → thấp nhất</option>
+                    <option value="gpa_asc">GPA thấp nhất → cao nhất</option>
+                    <option value="hoten_asc">Tên A → Z</option>
+                    <option value="hoten_desc">Tên Z → A</option>
+                    <option value="mssv_asc">MSSV tăng dần</option>
+                    <option value="mssv_desc">MSSV giảm dần</option>
+                    <option value="lop_asc">Lớp A → Z</option>
+                    <option value="xeploai_desc">Xếp loại cao → thấp</option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
         </div>
