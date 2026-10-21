@@ -64,17 +64,41 @@
       </form>
 
       <div class="mt-4 pt-3 border-top">
-        <small class="text-muted d-block mb-2 fw-semibold">Tài khoản demo:</small>
-        <div class="d-flex flex-column gap-1 small text-muted">
-          <div><code class="text-primary fw-bold">admin</code> / <code>Admin@123</code> <span class="badge bg-danger ms-1">Admin</span></div>
-          <div><code class="text-primary fw-bold">GV001</code> / <code>GV001@Huit</code> <span class="badge bg-warning text-dark ms-1">Giáo viên</span></div>
-          <div><code class="text-primary fw-bold">SV2026001</code> / <code>SV2026001@Huit</code> <span class="badge bg-info text-dark ms-1">Sinh viên</span></div>
+        <small class="text-muted d-block mb-2 fw-semibold">Tài khoản demo (Bấm để điền nhanh):</small>
+        <div class="d-flex flex-column gap-2 small">
+          <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light border" role="button" onclick="fillDemo('admin', 'Admin@123')" title="Bấm để tự điền tài khoản Admin" style="cursor: pointer;">
+            <div>
+              <span class="badge bg-danger me-1">Admin</span>
+              <code class="text-primary fw-bold">admin</code> / <code>Admin@123</code>
+            </div>
+            <span class="text-primary small fw-semibold"><i class="bi bi-box-arrow-in-right me-1"></i>Điền</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light border" role="button" onclick="fillDemo('GV001', 'GV001@Huit')" title="Bấm để tự điền tài khoản Giáo viên" style="cursor: pointer;">
+            <div>
+              <span class="badge bg-warning text-dark me-1">Giáo viên</span>
+              <code class="text-primary fw-bold">GV001</code> / <code>GV001@Huit</code>
+            </div>
+            <span class="text-primary small fw-semibold"><i class="bi bi-box-arrow-in-right me-1"></i>Điền</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light border" role="button" onclick="fillDemo('SV2026001', 'SV2026001@Huit')" title="Bấm để tự điền tài khoản Sinh viên" style="cursor: pointer;">
+            <div>
+              <span class="badge bg-info text-dark me-1">Sinh viên</span>
+              <code class="text-primary fw-bold">SV2026001</code> / <code>SV2026001@Huit</code>
+            </div>
+            <span class="text-primary small fw-semibold"><i class="bi bi-box-arrow-in-right me-1"></i>Điền</span>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
   <script>
+    function fillDemo(username, password) {
+      document.getElementById('loginUsername').value = username;
+      document.getElementById('loginPassword').value = password;
+      const alertBox = document.getElementById('loginAlert');
+      if (alertBox) alertBox.classList.add('d-none');
+    }
     // Nếu đã đăng nhập thì chuyển hướng luôn
     const token = localStorage.getItem('token');
     const role = localStorage.getItem('role');
