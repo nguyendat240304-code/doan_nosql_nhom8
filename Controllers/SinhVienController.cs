@@ -789,13 +789,34 @@ public class SinhVienController : ControllerBase
         if (CurrentRole == "sinhvien" && CurrentRefId != targetSvId)
             return Forbid();
 
-        // Kiểm tra đã đăng ký LHP này chưa
+        // KIỂM TRA TRẠNG THÁI HỌC VỤ: Chỉ sinh viên "Đang học" mới được đăng ký học phần
+        if (!string.Equals(sv.TrangThai, "Đang học", StringComparison.OrdinalIgnoreCase))
+        {
+            var lyDo = !string.IsNullOrWhiteSpace(sv.LyDoTrangThai) ? $" (Lý do: {sv.LyDoTrangThai})" : "";
+            return BadRequest($"Sinh viên hiện ở trạng thái '{sv.TrangThai}'{lyDo}, không đủ điều kiện đăng ký học phần.");
+        }
+
+        // Kiểm tra đã đăng ký chính LHP này chưa
         if (sv.BangDiem.Any(b => b.MaLHP == maLhp))
             return BadRequest("Bạn đã đăng ký lớp học phần này rồi.");
 
-        // Kiểm tra đã có môn này chưa
-        if (sv.BangDiem.Any(b => b.MaMon == lhp.MaMon))
-            return BadRequest($"Bạn đã đăng ký môn {lhp.TenMon} ({lhp.MaMon}) trong một lớp học phần khác.");
+        // KIỂM TRA MÔN HỌC & ĐIỀU KIỆN HỌC LẠI / HỌC CẢI THIỆN:
+        // 1. Trùng lớp trong cùng học kỳ / năm học: Không được đăng ký 2 lớp cùng môn trong 1 kỳ
+        var trungKy = sv.BangDiem.FirstOrDefault(b => b.MaMon == lhp.MaMon && b.Hocky == lhp.Hocky && b.NamHoc == lhp.NamHoc);
+        if (trungKy != null)
+            return BadRequest($"Bạn đã đăng ký môn '{lhp.TenMon}' trong lớp '{trungKy.MaLHP}' của học kỳ {lhp.Hocky} ({lhp.NamHoc}) rồi.");
+
+        // 2. Đang học (chưa có điểm tổng kết): Không được đăng ký trùng
+        var dangHoc = sv.BangDiem.FirstOrDefault(b => b.MaMon == lhp.MaMon && !b.DiemTongKet.HasValue);
+        if (dangHoc != null)
+            return BadRequest($"Bạn đang theo học môn '{lhp.TenMon}' (Lớp: {dangHoc.MaLHP}) và chưa có điểm tổng kết.");
+
+        // 3. Đã hoàn thành môn học và đạt điểm cao (Điểm TK >= 5.5 - C trở lên): Không cần học lại
+        var daDatTot = sv.BangDiem.FirstOrDefault(b => b.MaMon == lhp.MaMon && b.DiemTongKet.HasValue && b.DiemTongKet.Value >= 5.5);
+        if (daDatTot != null)
+            return BadRequest($"Bạn đã hoàn thành môn '{lhp.TenMon}' với kết quả đạt (Điểm TK: {daDatTot.DiemTongKet:0.0} - Điểm chữ: {daDatTot.DiemChu}). Không cần đăng ký lại.");
+
+        // Ghi chú: Nếu sinh viên bị rớt môn (Điểm TK < 4.0 - F) hoặc điểm D/D+ (4.0 <= Điểm TK < 5.5) -> Cho phép đăng ký Học lại / Học cải thiện!
 
         // Lấy thông tin môn học để kiểm tra khoa
         var monHoc = await _mongoDbService.MonHocs.Find(x => x.Id == lhp.MaMon).FirstOrDefaultAsync();
