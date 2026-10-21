@@ -20,7 +20,6 @@ builder.Services.AddControllers()
         o.JsonSerializerOptions.PropertyNamingPolicy = null;
         o.JsonSerializerOptions.WriteIndented = false;
     });
-builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSingleton<MongoDbService>();
 builder.Services.AddMemoryCache();
@@ -92,11 +91,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
-
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
 
 app.UseCors();
 app.UseDefaultFiles();
