@@ -25,30 +25,32 @@
   <div id="alertBox"></div>
 
   <!-- Header -->
-  <div class="page-header d-flex justify-content-between align-items-center mb-3">
-    <div>
-      <h4 class="mb-1"><i class="bi bi-book text-primary me-2"></i>Quản lý Môn học &amp; Chuẩn đầu ra (CLO)</h4>
-      <small class="text-muted">Danh sách học phần, ma trận tiên quyết và chuẩn đầu ra học phần theo tiêu chuẩn HUIT</small>
-    </div>
-    <button class="btn btn-primary" id="btnAddMonHoc" data-bs-toggle="modal" data-bs-target="#modalMonHoc" onclick="openCreateMonHoc()">
-      <i class="bi bi-plus-lg me-1"></i> Thêm môn học mới
-    </button>
+  <div class="page-header mb-3">
+    <h4 class="mb-1"><i class="bi bi-book text-primary me-2"></i>Quản lý Môn học &amp; Chuẩn đầu ra (CLO)</h4>
+    <small class="text-muted">Danh sách học phần, ma trận tiên quyết và chuẩn đầu ra học phần theo tiêu chuẩn HUIT</small>
   </div>
 
-  <!-- Nav Tabs -->
-  <ul class="nav nav-pills mb-3 border-bottom pb-2 gap-2" id="mhTabs" role="tablist">
-    <li class="nav-item">
-      <button class="nav-link active fw-semibold" id="tab-monhoc-btn" data-bs-toggle="pill" data-bs-target="#tab-monhoc" type="button" role="tab" onclick="onSwitchTab('monhoc')">
-        <i class="bi bi-book me-1"></i>Danh sách Môn học
+  <!-- Nav Tabs & Thao tác Thêm mới -->
+  <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+    <ul class="nav nav-pills gap-2 mb-0" id="mhTabs" role="tablist">
+      <li class="nav-item">
+        <button class="nav-link active fw-semibold" id="tab-monhoc-btn" data-bs-toggle="pill" data-bs-target="#tab-monhoc" type="button" role="tab" onclick="onSwitchTab('monhoc')">
+          <i class="bi bi-book me-1"></i>Danh sách Môn học
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link fw-semibold" id="tab-clo-btn" data-bs-toggle="pill" data-bs-target="#tab-clo" type="button" role="tab" onclick="onSwitchTab('clo')">
+          <i class="bi bi-award-fill me-1"></i>Quản lý Chuẩn đầu ra (CLO)
+          <span id="badgeTotalClos" class="badge bg-secondary ms-1">0</span>
+        </button>
+      </li>
+    </ul>
+    <div>
+      <button class="btn btn-primary" id="btnAddMonHoc" data-bs-toggle="modal" data-bs-target="#modalMonHoc" onclick="openCreateMonHoc()">
+        <i class="bi bi-plus-lg me-1"></i> Thêm môn học mới
       </button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link fw-semibold" id="tab-clo-btn" data-bs-toggle="pill" data-bs-target="#tab-clo" type="button" role="tab" onclick="onSwitchTab('clo')">
-        <i class="bi bi-award-fill me-1"></i>Quản lý Chuẩn đầu ra (CLO)
-        <span id="badgeTotalClos" class="badge bg-secondary ms-1">0</span>
-      </button>
-    </li>
-  </ul>
+    </div>
+  </div>
 
   <div class="tab-content" id="mhTabsContent">
     <!-- TAB 1: DANH SÁCH MÔN HỌC -->
@@ -109,7 +111,7 @@
     <div class="tab-pane fade" id="tab-clo" role="tabpanel">
       <!-- Thống kê CLO -->
       <div class="row g-3 mb-4">
-        <div class="col-lg-3 col-sm-6">
+        <div class="col-md-4 col-sm-6">
           <div class="card border-0 shadow-sm stat-card bg-primary text-white">
             <div class="card-body py-3">
               <div class="d-flex justify-content-between align-items-center">
@@ -122,7 +124,7 @@
             </div>
           </div>
         </div>
-        <div class="col-lg-3 col-sm-6">
+        <div class="col-md-4 col-sm-6">
           <div class="card border-0 shadow-sm stat-card bg-success text-white">
             <div class="card-body py-3">
               <div class="d-flex justify-content-between align-items-center">
@@ -135,7 +137,7 @@
             </div>
           </div>
         </div>
-        <div class="col-lg-3 col-sm-6">
+        <div class="col-md-4 col-sm-6">
           <div class="card border-0 shadow-sm stat-card bg-warning text-dark">
             <div class="card-body py-3">
               <div class="d-flex justify-content-between align-items-center">
@@ -144,19 +146,6 @@
                   <h3 class="mb-0 fw-bold" id="statMonWithoutClo">0</h3>
                 </div>
                 <i class="bi bi-exclamation-circle-fill fs-1 text-black-50"></i>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-3 col-sm-6">
-          <div class="card border-0 shadow-sm stat-card bg-info text-white">
-            <div class="card-body py-3">
-              <div class="d-flex justify-content-between align-items-center">
-                <div>
-                  <div class="small text-white-50">CLO Bậc 3+ (Vận dụng/PT)</div>
-                  <h3 class="mb-0 fw-bold" id="statHigherBloom">0</h3>
-                </div>
-                <i class="bi bi-bar-chart-steps fs-1 text-white-50"></i>
               </div>
             </div>
           </div>
@@ -1288,7 +1277,8 @@
     document.getElementById('statTotalClos').textContent = allClos.length;
     document.getElementById('statMonWithClo').textContent = monWithCloCount;
     document.getElementById('statMonWithoutClo').textContent = _monHocAll.length - monWithCloCount;
-    document.getElementById('statHigherBloom').textContent = higherBloomCount;
+    const elHigherBloom = document.getElementById('statHigherBloom');
+    if (elHigherBloom) elHigherBloom.textContent = higherBloomCount;
     document.getElementById('badgeTotalClos').textContent = allClos.length;
 
     // Cập nhật dropdown môn học trong tab CLO
