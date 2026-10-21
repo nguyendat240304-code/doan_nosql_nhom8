@@ -168,22 +168,21 @@
                 <span id="diemSvCount" class="badge bg-secondary"></span>
               </div>
               
-              <!-- Hàng 1: Tìm theo tên hoặc MSSV -->
-              <div class="row g-2 align-items-center mb-2">
-                <label for="diemSearchText" class="col-sm-auto col-form-label col-form-label-sm fw-semibold text-start mb-0 text-nowrap" style="width: 185px;">
+              <!-- Grid 2 hàng: Tìm theo tên/MSSV và Sắp xếp -->
+              <div style="display: grid; grid-template-columns: auto 1fr; column-gap: 10px; row-gap: 8px; align-items: center;">
+                <!-- Hàng 1: Tìm theo tên hoặc MSSV -->
+                <label for="diemSearchText" class="col-form-label-sm fw-semibold text-start mb-0 text-nowrap">
                   Tìm theo tên hoặc MSSV
                 </label>
-                <div class="col-sm">
+                <div>
                   <input id="diemSearchText" class="form-control form-control-sm" placeholder="Nhập tên hoặc MSSV..." oninput="filterDiemTable()" />
                 </div>
-              </div>
 
-              <!-- Hàng 2: Sắp xếp -->
-              <div class="row g-2 align-items-center">
-                <label for="diemSortSelect" class="col-sm-auto col-form-label col-form-label-sm fw-semibold text-sm-end text-start mb-0 text-nowrap pe-sm-2" style="width: 185px;">
+                <!-- Hàng 2: Sắp xếp -->
+                <label for="diemSortSelect" class="col-form-label-sm fw-semibold text-end mb-0 text-nowrap">
                   Sắp xếp
                 </label>
-                <div class="col-sm">
+                <div>
                   <select id="diemSortSelect" class="form-select form-select-sm" onchange="onDiemSortSelectChange(this.value)">
                     <option value="gpa_desc">GPA cao nhất → thấp nhất</option>
                     <option value="gpa_asc">GPA thấp nhất → cao nhất</option>
