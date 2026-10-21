@@ -597,7 +597,7 @@
       const khoaName = _khoaMap[m.MaKhoa] ? `${_khoaMap[m.MaKhoa]} <small class="text-muted">(${m.MaKhoa})</small>` : m.MaKhoa;
       
       const closBadges = (m.CLO || []).map(c => 
-        `<span class="badge ${getBloomBadgeClass(c.MucDo)} me-1 mb-1" title="${c.MoTa || ''} [Mức độ: ${c.MucDo || 'N/A'}]">${c.MaCLO}</span>`
+        `<span class="badge ${getBloomBadgeClass(c.MucDo)} me-1 mb-1" title="${c.MoTa || ''} [Mức độ: ${formatBloomLevel(c.MucDo)}]">${c.MaCLO}</span>`
       ).join('') || '<span class="text-muted small fst-italic">Chưa có CLO</span>';
 
       const adminActions = role === 'admin' ? `
@@ -622,16 +622,52 @@
     }).join('');
   }
 
+  function formatBloomLevel(mucDo) {
+    if (!mucDo) return 'Chưa phân bậc';
+    const s = mucDo.trim().toLowerCase();
+    if (s === 'remembering' || s === 'remember' || s === 'nhớ' || s.includes('bậc 1') || s === 'k1') {
+      return 'Nhớ (Bậc 1)';
+    }
+    if (s === 'understanding' || s === 'understand' || s === 'hiểu' || s.includes('bậc 2') || s === 'k2') {
+      return 'Hiểu (Bậc 2)';
+    }
+    if (s === 'applying' || s === 'apply' || (s.includes('vận dụng') && !s.includes('vận dụng cao')) || s.includes('bậc 3') || s === 'k3' || s.includes('thấu hiểu')) {
+      return 'Vận dụng (Bậc 3)';
+    }
+    if (s === 'analyzing' || s === 'analysis' || s === 'analyze' || s.includes('phân tích') || s.includes('vận dụng cao') || s.includes('bậc 4') || s === 'k4') {
+      return 'Phân tích (Bậc 4)';
+    }
+    if (s === 'evaluating' || s === 'evaluation' || s === 'evaluate' || s.includes('đánh giá') || s.includes('bậc 5') || s === 'k5') {
+      return 'Đánh giá (Bậc 5)';
+    }
+    if (s === 'creating' || s === 'creation' || s === 'create' || s.includes('sáng tạo') || s.includes('bậc 6') || s === 'k6') {
+      return 'Sáng tạo (Bậc 6)';
+    }
+    return mucDo;
+  }
+
   function getBloomBadgeClass(mucDo) {
     if (!mucDo) return 'bg-secondary';
-    const s = mucDo.toLowerCase();
-    if (s.includes('nhớ') || s.includes('bậc 1')) return 'bloom-bac-1';
-    if (s.includes('hiểu') || s.includes('bậc 2')) return 'bloom-bac-2';
-    if (s.includes('vận dụng cao') || s.includes('bậc 4')) return 'bloom-bac-4';
-    if (s.includes('vận dụng') || s.includes('bậc 3') || s.includes('thấu hiểu')) return 'bloom-bac-3';
-    if (s.includes('đánh giá') || s.includes('bậc 5')) return 'bloom-bac-5';
-    if (s.includes('sáng tạo') || s.includes('bậc 6')) return 'bloom-bac-6';
+    const s = mucDo.trim().toLowerCase();
+    if (s === 'remembering' || s.includes('nhớ') || s.includes('bậc 1')) return 'bloom-bac-1';
+    if (s === 'understanding' || s.includes('hiểu') || s.includes('bậc 2')) return 'bloom-bac-2';
+    if (s === 'applying' || (s.includes('vận dụng') && !s.includes('vận dụng cao')) || s.includes('bậc 3') || s.includes('thấu hiểu')) return 'bloom-bac-3';
+    if (s === 'analyzing' || s.includes('phân tích') || s.includes('vận dụng cao') || s.includes('bậc 4')) return 'bloom-bac-4';
+    if (s === 'evaluating' || s.includes('đánh giá') || s.includes('bậc 5')) return 'bloom-bac-5';
+    if (s === 'creating' || s.includes('sáng tạo') || s.includes('bậc 6')) return 'bloom-bac-6';
     return 'bg-primary';
+  }
+
+  function getBloomRank(mucDo) {
+    if (!mucDo) return 0;
+    const s = mucDo.trim().toLowerCase();
+    if (s === 'creating' || s.includes('sáng tạo') || s.includes('bậc 6')) return 6;
+    if (s === 'evaluating' || s.includes('đánh giá') || s.includes('bậc 5')) return 5;
+    if (s === 'analyzing' || s.includes('phân tích') || s.includes('vận dụng cao') || s.includes('bậc 4')) return 4;
+    if (s === 'applying' || s.includes('vận dụng') || s.includes('thấu hiểu') || s.includes('bậc 3')) return 3;
+    if (s === 'understanding' || s.includes('hiểu') || s.includes('bậc 2')) return 2;
+    if (s === 'remembering' || s.includes('nhớ') || s.includes('bậc 1')) return 1;
+    return 0;
   }
 
   // ==========================================
@@ -840,6 +876,7 @@
       maCLO = `CLO${currentRows + 1}`;
     }
 
+    const fmt = formatBloomLevel(mucDo);
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>
@@ -850,12 +887,12 @@
       </td>
       <td>
         <select class="form-select form-select-sm clo-mucdo">
-          <option value="Nhớ (Bậc 1)" ${mucDo.includes('Nhớ') || mucDo.includes('1') ? 'selected' : ''}>Nhớ (Bậc 1)</option>
-          <option value="Hiểu (Bậc 2)" ${mucDo.includes('Hiểu') || mucDo.includes('2') ? 'selected' : ''}>Hiểu (Bậc 2)</option>
-          <option value="Vận dụng (Bậc 3)" ${mucDo.includes('Vận dụng (Bậc 3)') || mucDo === 'Vận dụng' ? 'selected' : ''}>Vận dụng (Bậc 3)</option>
-          <option value="Vận dụng cao (Bậc 4)" ${mucDo.includes('Vận dụng cao') || mucDo.includes('Phân tích') || mucDo.includes('4') ? 'selected' : ''}>Vận dụng cao (Bậc 4)</option>
-          <option value="Đánh giá (Bậc 5)" ${mucDo.includes('Đánh giá') || mucDo.includes('5') ? 'selected' : ''}>Đánh giá (Bậc 5)</option>
-          <option value="Sáng tạo (Bậc 6)" ${mucDo.includes('Sáng tạo') || mucDo.includes('6') ? 'selected' : ''}>Sáng tạo (Bậc 6)</option>
+          <option value="Nhớ (Bậc 1)" ${fmt.includes('Nhớ') || fmt.includes('1') ? 'selected' : ''}>Nhớ (Bậc 1)</option>
+          <option value="Hiểu (Bậc 2)" ${fmt.includes('Hiểu') || fmt.includes('2') ? 'selected' : ''}>Hiểu (Bậc 2)</option>
+          <option value="Vận dụng (Bậc 3)" ${fmt.includes('Vận dụng (Bậc 3)') || fmt === 'Vận dụng' ? 'selected' : ''}>Vận dụng (Bậc 3)</option>
+          <option value="Vận dụng cao (Bậc 4)" ${fmt.includes('Vận dụng cao') || fmt.includes('Phân tích') || fmt.includes('4') ? 'selected' : ''}>Phân tích / Vận dụng cao (Bậc 4)</option>
+          <option value="Đánh giá (Bậc 5)" ${fmt.includes('Đánh giá') || fmt.includes('5') ? 'selected' : ''}>Đánh giá (Bậc 5)</option>
+          <option value="Sáng tạo (Bậc 6)" ${fmt.includes('Sáng tạo') || fmt.includes('6') ? 'selected' : ''}>Sáng tạo (Bậc 6)</option>
         </select>
       </td>
       <td class="text-center">
@@ -1111,8 +1148,7 @@
           SoTinChi: m.SoTinChi,
           MaKhoa: m.MaKhoa
         });
-        const md = (c.MucDo || '').toLowerCase();
-        if (md.includes('vận dụng') || md.includes('phân tích') || md.includes('đánh giá') || md.includes('sáng tạo') || md.includes('bậc 3') || md.includes('bậc 4') || md.includes('bậc 5') || md.includes('bậc 6')) {
+        if (getBloomRank(c.MucDo) >= 3) {
           higherBloomCount++;
         }
       });
@@ -1163,22 +1199,12 @@
       const matchQ = !q || (c.MaCLO || '').toLowerCase().includes(q) || (c.MoTa || '').toLowerCase().includes(q) || (c.TenMon || '').toLowerCase().includes(q);
       const matchKhoa = !maKhoa || c.MaKhoa === maKhoa;
       const matchMon = !maMon || c.MaMon === maMon;
-      const matchMucDo = !mucDo || (c.MucDo || '').toLowerCase().includes(mucDo.toLowerCase());
+      const fmt = formatBloomLevel(c.MucDo).toLowerCase();
+      const matchMucDo = !mucDo || fmt.includes(mucDo.toLowerCase()) || (c.MucDo || '').toLowerCase().includes(mucDo.toLowerCase());
       return matchQ && matchKhoa && matchMon && matchMucDo;
     });
 
     const sortVal = document.getElementById('cloSortSelect')?.value || 'clo_asc';
-    function getBloomRank(mucDo) {
-      if (!mucDo) return 0;
-      const s = mucDo.toLowerCase();
-      if (s.includes('sáng tạo') || s.includes('bậc 6') || s.includes('6')) return 6;
-      if (s.includes('đánh giá') || s.includes('bậc 5') || s.includes('5')) return 5;
-      if (s.includes('vận dụng cao') || s.includes('phân tích') || s.includes('bậc 4') || s.includes('4')) return 4;
-      if (s.includes('vận dụng') || s.includes('thấu hiểu') || s.includes('bậc 3') || s.includes('3')) return 3;
-      if (s.includes('hiểu') || s.includes('bậc 2') || s.includes('2')) return 2;
-      if (s.includes('nhớ') || s.includes('bậc 1') || s.includes('1')) return 1;
-      return 0;
-    }
 
     filtered.sort((a, b) => {
       switch (sortVal) {
@@ -1224,7 +1250,7 @@
           <td><span class="badge bg-light text-dark border">${khoaName}</span></td>
           <td><div class="text-wrap">${c.MoTa || '<i class="text-muted">Chưa có mô tả chi tiết</i>'}</div></td>
           <td class="text-center">
-            <span class="badge ${getBloomBadgeClass(c.MucDo)} px-2 py-1">${c.MucDo || 'Chưa phân bậc'}</span>
+            <span class="badge ${getBloomBadgeClass(c.MucDo)} px-2 py-1 fw-semibold">${formatBloomLevel(c.MucDo)}</span>
           </td>
           <td class="text-end">
             <button class="btn btn-sm btn-outline-primary" onclick="editMonHoc('${c.MaMon}')" title="Chỉnh sửa CLO của môn này">
