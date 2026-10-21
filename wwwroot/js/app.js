@@ -1414,58 +1414,17 @@ async function openChiTietDiem(svId, filterMaLhp) {
       bangDiemHienThi = bangDiemHienThi.filter(b => b.GiangVien?.MaGV === currentRefId);
     }
 
-    if (bangDiemHienThi.length === 0) {
-      tbody.innerHTML = filterMaLhp
-        ? `<tr><td colspan="11" class="text-center py-4 text-muted">Sinh viên này chưa có điểm cho lớp học phần <code>${filterMaLhp}</code>.</td></tr>`
-        : '<tr><td colspan="11" class="text-center py-4 text-muted">Sinh viên này chưa có điểm môn học nào.</td></tr>';
-    } else {
-      tbody.innerHTML = bangDiemHienThi.map(b => {
-        const coQuyenSua = role === 'admin' || (
-          role === 'giaovien' &&
-          currentLhpTeachers[b.MaLHP] === currentRefId &&
-          currentLhpScorePermissions[b.MaLHP] === true
-        );
+    // Lưu thông tin chi tiết hiện tại để phục vụ tính năng sắp xếp
+    _currentChiTietSv = sv;
+    _currentChiTietList = bangDiemHienThi;
+    _currentChiTietRole = role;
+    _currentChiTietRefId = currentRefId;
+    _currentChiTietTeachers = currentLhpTeachers;
+    _currentChiTietPermissions = currentLhpScorePermissions;
+    _chiTietSortCol = 'MaLHP';
+    _chiTietSortAsc = true;
 
-        const complete = gradeComplete(b);
-        const safeTenMon = (b.TenMon || '').replace(/'/g, "\\'");
-        const lichSuBtn = `
-            <button class="btn btn-sm btn-outline-secondary me-1" title="Lịch sử thay đổi điểm (Audit Log)"
-              onclick="openModalLichSuDiem('${sv.Id}', '${b.MaLHP}', '${safeTenMon}')">
-              <i class="bi bi-clock-history"></i> Lịch sử
-            </button>`;
-
-        const thaoTacHtml = coQuyenSua ? `
-            <button class="btn btn-sm btn-outline-success me-1" title="Sửa điểm ($set)"
-              onclick="openModalEditDiem('${sv.Id}', '${b.MaLHP}', '${safeTenMon}', ${b.DiemThanhPhan?.ChuyenCan ?? 'null'}, ${b.DiemThanhPhan?.GiuaKy ?? 'null'}, ${b.DiemThanhPhan?.ThucHanh ?? 'null'}, ${b.DiemThanhPhan?.CuoiKy ?? 'null'})">
-              <i class="bi bi-pencil-square"></i> Sửa
-            </button>
-            ${lichSuBtn}
-            <button class="btn btn-sm btn-outline-danger" title="Xóa điểm"
-              onclick="xoaMonKhoiBangDiem('${sv.Id}', '${b.MaLHP}', '${safeTenMon}')">
-              <i class="bi bi-trash"></i> Xóa điểm
-            </button>` : `${lichSuBtn}<span class="text-muted small">Chỉ xem</span>`;
-
-        const xoaKhoiLopHtml = role === 'admin' ? `<button class="btn btn-sm btn-danger ms-1" title="Xóa khỏi lớp" onclick="xoaSinhVienKhoiLop('${sv.Id}', '${b.MaLHP}', '${b.TenMon}')"><i class="bi bi-person-dash"></i> Xóa khỏi lớp</button>` : '';
-
-        return `
-        <tr>
-          <td><code class="fw-semibold">${b.MaLHP}</code></td>
-          <td>
-            <div class="fw-bold">${b.TenMon}</div>
-            <small class="text-muted">${b.MaMon}</small>
-          </td>
-          <td><span class="badge bg-info text-dark">${b.SoTinChi} TC</span></td>
-          <td><small>${getTeacherName(b.GiangVien)}</small></td>
-          <td class="text-center">${b.DiemThanhPhan?.ChuyenCan ?? '-'}</td>
-          <td class="text-center">${b.DiemThanhPhan?.GiuaKy ?? '-'}</td>
-          <td class="text-center">${b.DiemThanhPhan?.ThucHanh ?? '-'}</td>
-          <td class="text-center">${b.DiemThanhPhan?.CuoiKy ?? '-'}</td>
-          <td class="text-center fw-bold text-primary">${complete ? b.DiemTongKet : gradeStatus(b)}</td>
-          <td class="text-center"><span class="badge bg-light text-dark border">${complete ? (b.DiemChu || '\u2014') : gradeStatus(b)}</span></td>
-          <td class="text-end">${thaoTacHtml}${xoaKhoiLopHtml}</td>
-        </tr>`;
-      }).join('');
-    }
+    renderChiTietDiemTable();
 
     // Lưu svId hiện tại cho các hàm push/edit/xóa biết cần reload lại modal
     document.getElementById('modalChiTietDiem').dataset.svId = sv.Id;
@@ -1475,6 +1434,119 @@ async function openChiTietDiem(svId, filterMaLhp) {
     document.getElementById('chiTietDiemBody').innerHTML =
       `<tr><td colspan="11" class="text-center py-3 text-danger">Không tìm thấy sinh viên: ${svId}</td></tr>`;
   }
+}
+
+let _currentChiTietSv = null;
+let _currentChiTietList = [];
+let _chiTietSortCol = 'MaLHP';
+let _chiTietSortAsc = true;
+let _currentChiTietRole = '';
+let _currentChiTietRefId = '';
+let _currentChiTietTeachers = {};
+let _currentChiTietPermissions = {};
+
+function sortChiTietDiem(col) {
+  if (_chiTietSortCol === col) {
+    _chiTietSortAsc = !_chiTietSortAsc;
+  } else {
+    _chiTietSortCol = col;
+    _chiTietSortAsc = (col !== 'DiemTongKet' && col !== 'SoTinChi');
+  }
+  renderChiTietDiemTable();
+}
+
+function updateChiTietSortIcons() {
+  const cols = ['MaLHP', 'TenMon', 'SoTinChi', 'DiemTongKet'];
+  cols.forEach(col => {
+    const icon = document.getElementById(`sortIconCt_${col}`);
+    if (!icon) return;
+    if (_chiTietSortCol === col) {
+      icon.className = `bi bi-sort-${_chiTietSortAsc ? 'up' : 'down'} text-primary ms-1`;
+    } else {
+      icon.className = 'bi bi-arrow-down-up small text-muted ms-1';
+    }
+  });
+}
+
+function renderChiTietDiemTable() {
+  updateChiTietSortIcons();
+  const tbody = document.getElementById('chiTietDiemBody');
+  if (!tbody || !_currentChiTietSv) return;
+
+  const sv = _currentChiTietSv;
+  const role = _currentChiTietRole;
+  const currentRefId = _currentChiTietRefId;
+  const currentLhpTeachers = _currentChiTietTeachers;
+  const currentLhpScorePermissions = _currentChiTietPermissions;
+
+  if (_currentChiTietList.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="11" class="text-center py-4 text-muted">Sinh viên này chưa có điểm môn học nào.</td></tr>';
+    return;
+  }
+
+  const sorted = [..._currentChiTietList].sort((a, b) => {
+    let res = 0;
+    if (_chiTietSortCol === 'DiemTongKet') {
+      const aVal = a.DiemTongKet != null ? Number(a.DiemTongKet) : -999;
+      const bVal = b.DiemTongKet != null ? Number(b.DiemTongKet) : -999;
+      res = _chiTietSortAsc ? aVal - bVal : bVal - aVal;
+    } else if (_chiTietSortCol === 'SoTinChi') {
+      res = _chiTietSortAsc ? (a.SoTinChi || 0) - (b.SoTinChi || 0) : (b.SoTinChi || 0) - (a.SoTinChi || 0);
+    } else if (_chiTietSortCol === 'TenMon') {
+      res = _chiTietSortAsc ? String(a.TenMon || '').localeCompare(String(b.TenMon || ''), 'vi') : String(b.TenMon || '').localeCompare(String(a.TenMon || ''), 'vi');
+    } else {
+      // MaLHP
+      res = _chiTietSortAsc ? String(a.MaLHP || '').localeCompare(String(b.MaLHP || ''), 'vi') : String(b.MaLHP || '').localeCompare(String(a.MaLHP || ''), 'vi');
+    }
+    return res;
+  });
+
+  tbody.innerHTML = sorted.map(b => {
+    const coQuyenSua = role === 'admin' || (
+      role === 'giaovien' &&
+      currentLhpTeachers[b.MaLHP] === currentRefId &&
+      currentLhpScorePermissions[b.MaLHP] === true
+    );
+
+    const complete = gradeComplete(b);
+    const safeTenMon = (b.TenMon || '').replace(/'/g, "\\'");
+    const lichSuBtn = `
+        <button class="btn btn-sm btn-outline-secondary me-1" title="Lịch sử thay đổi điểm (Audit Log)"
+          onclick="openModalLichSuDiem('${sv.Id}', '${b.MaLHP}', '${safeTenMon}')">
+          <i class="bi bi-clock-history"></i> Lịch sử
+        </button>`;
+
+    const thaoTacHtml = coQuyenSua ? `
+        <button class="btn btn-sm btn-outline-success me-1" title="Sửa điểm ($set)"
+          onclick="openModalEditDiem('${sv.Id}', '${b.MaLHP}', '${safeTenMon}', ${b.DiemThanhPhan?.ChuyenCan ?? 'null'}, ${b.DiemThanhPhan?.GiuaKy ?? 'null'}, ${b.DiemThanhPhan?.ThucHanh ?? 'null'}, ${b.DiemThanhPhan?.CuoiKy ?? 'null'})">
+          <i class="bi bi-pencil-square"></i> Sửa
+        </button>
+        ${lichSuBtn}
+        <button class="btn btn-sm btn-outline-danger" title="Xóa điểm"
+          onclick="xoaMonKhoiBangDiem('${sv.Id}', '${b.MaLHP}', '${safeTenMon}')">
+          <i class="bi bi-trash"></i> Xóa điểm
+        </button>` : `${lichSuBtn}<span class="text-muted small">Chỉ xem</span>`;
+
+    const xoaKhoiLopHtml = role === 'admin' ? `<button class="btn btn-sm btn-danger ms-1" title="Xóa khỏi lớp" onclick="xoaSinhVienKhoiLop('${sv.Id}', '${b.MaLHP}', '${b.TenMon}')"><i class="bi bi-person-dash"></i> Xóa khỏi lớp</button>` : '';
+
+    return `
+    <tr>
+      <td><code class="fw-semibold">${b.MaLHP}</code></td>
+      <td>
+        <div class="fw-bold">${b.TenMon}</div>
+        <small class="text-muted">${b.MaMon}</small>
+      </td>
+      <td class="text-center"><span class="badge bg-info text-dark">${b.SoTinChi} TC</span></td>
+      <td><small>${getTeacherName(b.GiangVien)}</small></td>
+      <td class="text-center">${b.DiemThanhPhan?.ChuyenCan ?? '-'}</td>
+      <td class="text-center">${b.DiemThanhPhan?.GiuaKy ?? '-'}</td>
+      <td class="text-center">${b.DiemThanhPhan?.ThucHanh ?? '-'}</td>
+      <td class="text-center">${b.DiemThanhPhan?.CuoiKy ?? '-'}</td>
+      <td class="text-center fw-bold text-primary">${complete ? b.DiemTongKet : gradeStatus(b)}</td>
+      <td class="text-center"><span class="badge bg-light text-dark border">${complete ? (b.DiemChu || '\u2014') : gradeStatus(b)}</span></td>
+      <td class="text-end text-nowrap">${thaoTacHtml}${xoaKhoiLopHtml}</td>
+    </tr>`;
+  }).join('');
 }
 
 async function openModalLichSuDiem(svId, maLhp, tenMon) {
@@ -1707,30 +1779,155 @@ async function fillLhpSelect(maKhoa) {
   }
 }
 
-// Table paging and debounced client filtering for the grading views.
+// Table paging, sorting and debounced client filtering for the grading views.
 const _renderDiemSvTableAll = renderDiemSvTableCore;
 let _diemSearchTimer;
+let _diemSortCol = 'GPA';
+let _diemSortAsc = false; // default: GPA cao nhất -> thấp nhất
+
+function getDiemSvGpaInfo(sv) {
+  if (sv._gpaInfo && sv._gpaFilterLhp === _currentFilterLhp) return sv._gpaInfo;
+  const bangDiemRaw = Array.isArray(sv.BangDiem) ? sv.BangDiem : (sv.BangDiem ? [sv.BangDiem] : []);
+  const bangDiem = _currentFilterLhp ? bangDiemRaw.filter(b => b.MaLHP === _currentFilterLhp) : bangDiemRaw;
+  if (!bangDiem.length) {
+    sv._gpaInfo = { gpa: null, xepLoai: 'Chưa có điểm' };
+    sv._gpaFilterLhp = _currentFilterLhp;
+    return sv._gpaInfo;
+  }
+  const graded = bangDiem.filter(gradeComplete);
+  if (!graded.length) {
+    sv._gpaInfo = { gpa: null, xepLoai: 'Chưa có điểm' };
+    sv._gpaFilterLhp = _currentFilterLhp;
+    return sv._gpaInfo;
+  }
+  const totalTc = graded.reduce((sum, b) => sum + (b.SoTinChi || 0), 0);
+  const gpa = totalTc > 0
+    ? graded.reduce((sum, b) => sum + b.DiemTongKet * (b.SoTinChi || 0), 0) / totalTc
+    : graded.reduce((sum, b) => sum + b.DiemTongKet, 0) / graded.length;
+  const rounded = Math.round(gpa * 100) / 100;
+  let xepLoai = 'Yếu';
+  if (rounded >= 9) xepLoai = 'Xuất sắc';
+  else if (rounded >= 8) xepLoai = 'Giỏi';
+  else if (rounded >= 7) xepLoai = 'Khá';
+  else if (rounded >= 5) xepLoai = 'Trung bình';
+  sv._gpaInfo = { gpa: rounded, xepLoai };
+  sv._gpaFilterLhp = _currentFilterLhp;
+  return sv._gpaInfo;
+}
+
+function onDiemSortSelectChange(val) {
+  switch (val) {
+    case 'gpa_desc': _diemSortCol = 'GPA'; _diemSortAsc = false; break;
+    case 'gpa_asc': _diemSortCol = 'GPA'; _diemSortAsc = true; break;
+    case 'hoten_asc': _diemSortCol = 'HoTen'; _diemSortAsc = true; break;
+    case 'hoten_desc': _diemSortCol = 'HoTen'; _diemSortAsc = false; break;
+    case 'mssv_asc': _diemSortCol = 'Id'; _diemSortAsc = true; break;
+    case 'mssv_desc': _diemSortCol = 'Id'; _diemSortAsc = false; break;
+    case 'lop_asc': _diemSortCol = 'LopSinhHoat'; _diemSortAsc = true; break;
+    case 'xeploai_desc': _diemSortCol = 'XepLoai'; _diemSortAsc = false; break;
+  }
+  _diemPage = 1;
+  filterDiemTableNow();
+}
+
+function sortDiemTable(column) {
+  if (_diemSortCol === column) {
+    _diemSortAsc = !_diemSortAsc;
+  } else {
+    _diemSortCol = column;
+    _diemSortAsc = (column !== 'GPA' && column !== 'XepLoai');
+  }
+  syncDiemSortSelect();
+  _diemPage = 1;
+  filterDiemTableNow();
+}
+
+function syncDiemSortSelect() {
+  const sel = document.getElementById('diemSortSelect');
+  if (!sel) return;
+  const key = `${_diemSortCol.toLowerCase()}_${_diemSortAsc ? 'asc' : 'desc'}`;
+  const aliasMap = {
+    'lopsinhhoat_asc': 'lop_asc',
+    'id_asc': 'mssv_asc',
+    'id_desc': 'mssv_desc'
+  };
+  const targetVal = aliasMap[key] || key;
+  if ([...sel.options].some(o => o.value === targetVal)) {
+    sel.value = targetVal;
+  }
+}
+
+function updateDiemSortIcons() {
+  const cols = ['Id', 'HoTen', 'LopSinhHoat', 'GPA', 'XepLoai'];
+  cols.forEach(col => {
+    const icon = document.getElementById(`sortIconDiem_${col}`);
+    if (!icon) return;
+    if (_diemSortCol === col) {
+      icon.className = `bi bi-sort-${_diemSortAsc ? 'up' : 'down'} text-primary ms-1`;
+    } else {
+      icon.className = 'bi bi-arrow-down-up small text-muted ms-1';
+    }
+  });
+}
+
 function filterDiemTable() {
   clearTimeout(_diemSearchTimer);
   _diemSearchTimer = setTimeout(() => {
     _diemPage = 1;
-    const q = (document.getElementById('diemSearchText')?.value || '').trim().toLocaleLowerCase('vi');
-    const rows = _diemSvCache.filter(s => `${s.Id || ''} ${s.HoTen || ''}`.toLocaleLowerCase('vi').includes(q));
-    renderDiemSvTable(rows);
+    filterDiemTableNow();
   }, 180);
 }
+
 function renderDiemSvTable(list) {
+  updateDiemSortIcons();
+  syncDiemSortSelect();
   const count = document.getElementById('diemSvCount');
   if (count) count.textContent = `${list.length}/${_diemSvCache.length} sinh viên`;
+
+  const xlRank = { 'Xuất sắc': 5, 'Giỏi': 4, 'Khá': 3, 'Trung bình': 2, 'Yếu': 1, 'Chưa có điểm': 0 };
+
+  const sorted = [...list].sort((a, b) => {
+    let res = 0;
+    const aInfo = getDiemSvGpaInfo(a);
+    const bInfo = getDiemSvGpaInfo(b);
+
+    if (_diemSortCol === 'GPA') {
+      const aVal = aInfo.gpa != null ? aInfo.gpa : -999;
+      const bVal = bInfo.gpa != null ? bInfo.gpa : -999;
+      res = _diemSortAsc ? aVal - bVal : bVal - aVal;
+    } else if (_diemSortCol === 'XepLoai') {
+      const aVal = xlRank[aInfo.xepLoai] ?? 0;
+      const bVal = xlRank[bInfo.xepLoai] ?? 0;
+      res = _diemSortAsc ? aVal - bVal : bVal - aVal;
+    } else if (_diemSortCol === 'Id') {
+      const aId = String(a.Id ?? a._id ?? '');
+      const bId = String(b.Id ?? b._id ?? '');
+      res = _diemSortAsc ? aId.localeCompare(bId, 'vi', { numeric: true }) : bId.localeCompare(aId, 'vi', { numeric: true });
+    } else if (_diemSortCol === 'LopSinhHoat') {
+      const aLop = String(a.LopSinhHoat || '');
+      const bLop = String(b.LopSinhHoat || '');
+      res = _diemSortAsc ? aLop.localeCompare(bLop, 'vi') : bLop.localeCompare(aLop, 'vi');
+    } else {
+      // HoTen
+      const aName = String(a.HoTen || '');
+      const bName = String(b.HoTen || '');
+      res = _diemSortAsc ? aName.localeCompare(bName, 'vi') : bName.localeCompare(aName, 'vi');
+    }
+
+    if (res !== 0) return res;
+    return String(a.HoTen || '').localeCompare(String(b.HoTen || ''), 'vi');
+  });
+
   const size = _diemPageSize;
-  const pages = Math.max(1, Math.ceil(list.length / size));
+  const pages = Math.max(1, Math.ceil(sorted.length / size));
   _diemPage = Math.min(_diemPage, pages);
-  const pageItems = list.slice((_diemPage - 1) * size, _diemPage * size);
+  const pageItems = sorted.slice((_diemPage - 1) * size, _diemPage * size);
   _renderDiemSvTableAll(pageItems);
-  if (count) count.textContent = `${list.length}/${_diemSvCache.length} sinh viên`;
-  renderTablePagination('diemSvPagination', list.length, _diemPage, size,
+  if (count) count.textContent = `${sorted.length}/${_diemSvCache.length} sinh viên`;
+  renderTablePagination('diemSvPagination', sorted.length, _diemPage, size,
     page => { _diemPage = page; filterDiemTableNow(); }, pageSize => { _diemPageSize = pageSize; _diemPage = 1; filterDiemTableNow(); });
 }
+
 function filterDiemTableNow() {
   const q = (document.getElementById('diemSearchText')?.value || '').trim().toLocaleLowerCase('vi');
   renderDiemSvTable(_diemSvCache.filter(s => `${s.Id || ''} ${s.HoTen || ''}`.toLocaleLowerCase('vi').includes(q)));
@@ -1899,24 +2096,133 @@ async function loadBaoCao() {
       tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="bi bi-inbox"></i><div>Không có dữ liệu</div></div></td></tr>';
       return;
     }
-    tbody.innerHTML = list.map((r, idx) => {
-      const gpa = r.GPA == null ? null : Number(r.GPA);
-      const gpaClass = gpa == null ? '' : gpa >= 8 ? 'score-pass' : gpa >= 5 ? 'score-avg' : 'score-fail';
-      const studentId = r.Id ?? r._id ?? '';
-      return `<tr>
-        <td class="text-muted small">${idx+1}</td>
-        <td><code class="fw-semibold text-primary">${studentId}</code></td>
-        <td class="fw-semibold">${r.HoTen}</td>
-        <td><span class="badge bg-light text-dark border">${r.LopSinhHoat}</span></td>
-        ${role !== 'giaovien' ? `<td class="text-center">${r.TongTinChi} TC</td>` : ''}
-        <td class="text-center"><span class="${gpaClass} fs-6">${gpa == null ? '?' : gpa.toFixed(2)}</span></td>
-        <td class="text-center">${xepLoaiBadge(r.XepLoai)}</td>
-      </tr>`;
-    }).join('');
+    _baoCaoRawList = list;
+    applyBaoCaoSortAndRender();
     loadCanhBaoHocVu(lop);
   } catch(e) {
     tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-3"><i class="bi bi-exclamation-triangle me-2"></i>${e.message}</td></tr>`;
   }
+}
+
+let _baoCaoRawList = [];
+let _baoCaoSortCol = 'GPA';
+let _baoCaoSortAsc = false; // default: GPA cao nhất -> thấp nhất
+
+function onBaoCaoSortSelectChange(val) {
+  switch (val) {
+    case 'gpa_desc': _baoCaoSortCol = 'GPA'; _baoCaoSortAsc = false; break;
+    case 'gpa_asc': _baoCaoSortCol = 'GPA'; _baoCaoSortAsc = true; break;
+    case 'hoten_asc': _baoCaoSortCol = 'HoTen'; _baoCaoSortAsc = true; break;
+    case 'hoten_desc': _baoCaoSortCol = 'HoTen'; _baoCaoSortAsc = false; break;
+    case 'mssv_asc': _baoCaoSortCol = 'Id'; _baoCaoSortAsc = true; break;
+    case 'mssv_desc': _baoCaoSortCol = 'Id'; _baoCaoSortAsc = false; break;
+    case 'lop_asc': _baoCaoSortCol = 'LopSinhHoat'; _baoCaoSortAsc = true; break;
+    case 'xeploai_desc': _baoCaoSortCol = 'XepLoai'; _baoCaoSortAsc = false; break;
+  }
+  applyBaoCaoSortAndRender();
+}
+
+function sortBaoCao(column) {
+  if (_baoCaoSortCol === column) {
+    _baoCaoSortAsc = !_baoCaoSortAsc;
+  } else {
+    _baoCaoSortCol = column;
+    _baoCaoSortAsc = (column !== 'GPA' && column !== 'TongTinChi' && column !== 'XepLoai');
+  }
+  syncBaoCaoSortSelect();
+  applyBaoCaoSortAndRender();
+}
+
+function syncBaoCaoSortSelect() {
+  const sel = document.getElementById('bcSortSelect');
+  if (!sel) return;
+  const key = `${_baoCaoSortCol.toLowerCase()}_${_baoCaoSortAsc ? 'asc' : 'desc'}`;
+  const aliasMap = {
+    'lopsinhhoat_asc': 'lop_asc',
+    'id_asc': 'mssv_asc',
+    'id_desc': 'mssv_desc'
+  };
+  const targetVal = aliasMap[key] || key;
+  if ([...sel.options].some(o => o.value === targetVal)) {
+    sel.value = targetVal;
+  }
+}
+
+function updateBaoCaoSortIcons() {
+  const cols = ['Id', 'HoTen', 'LopSinhHoat', 'TongTinChi', 'GPA', 'XepLoai'];
+  cols.forEach(col => {
+    const icon = document.getElementById(`sortIconBc_${col}`);
+    if (!icon) return;
+    if (_baoCaoSortCol === col) {
+      icon.className = `bi bi-sort-${_baoCaoSortAsc ? 'up' : 'down'} text-primary ms-1`;
+    } else {
+      icon.className = 'bi bi-arrow-down-up small text-muted ms-1';
+    }
+  });
+}
+
+function applyBaoCaoSortAndRender() {
+  updateBaoCaoSortIcons();
+  syncBaoCaoSortSelect();
+  if (!_baoCaoRawList || !_baoCaoRawList.length) return;
+
+  const xlRank = { 'Xuất sắc': 5, 'Giỏi': 4, 'Khá': 3, 'Trung bình': 2, 'Yếu': 1, 'Chưa có điểm': 0 };
+
+  const sorted = [..._baoCaoRawList].sort((a, b) => {
+    let res = 0;
+    if (_baoCaoSortCol === 'GPA') {
+      const aVal = a.GPA != null ? Number(a.GPA) : -999;
+      const bVal = b.GPA != null ? Number(b.GPA) : -999;
+      res = _baoCaoSortAsc ? aVal - bVal : bVal - aVal;
+    } else if (_baoCaoSortCol === 'TongTinChi') {
+      const aVal = Number(a.TongTinChi || 0);
+      const bVal = Number(b.TongTinChi || 0);
+      res = _baoCaoSortAsc ? aVal - bVal : bVal - aVal;
+    } else if (_baoCaoSortCol === 'XepLoai') {
+      const aVal = xlRank[a.XepLoai] ?? 0;
+      const bVal = xlRank[b.XepLoai] ?? 0;
+      res = _baoCaoSortAsc ? aVal - bVal : bVal - aVal;
+    } else if (_baoCaoSortCol === 'Id') {
+      const aId = String(a.Id ?? a._id ?? '');
+      const bId = String(b.Id ?? b._id ?? '');
+      res = _baoCaoSortAsc ? aId.localeCompare(bId, 'vi', { numeric: true }) : bId.localeCompare(aId, 'vi', { numeric: true });
+    } else if (_baoCaoSortCol === 'LopSinhHoat') {
+      const aLop = String(a.LopSinhHoat || '');
+      const bLop = String(b.LopSinhHoat || '');
+      res = _baoCaoSortAsc ? aLop.localeCompare(bLop, 'vi') : bLop.localeCompare(aLop, 'vi');
+    } else {
+      // HoTen
+      const aName = String(a.HoTen || '');
+      const bName = String(b.HoTen || '');
+      res = _baoCaoSortAsc ? aName.localeCompare(bName, 'vi') : bName.localeCompare(aName, 'vi');
+    }
+
+    if (res !== 0) return res;
+    return String(a.HoTen || '').localeCompare(String(b.HoTen || ''), 'vi');
+  });
+
+  renderBaoCaoTableBody(sorted);
+}
+
+function renderBaoCaoTableBody(list) {
+  const role = localStorage.getItem('role');
+  const tbody = document.getElementById('bcTable');
+  if (!tbody) return;
+
+  tbody.innerHTML = list.map((r, idx) => {
+    const gpa = r.GPA == null ? null : Number(r.GPA);
+    const gpaClass = gpa == null ? '' : gpa >= 8 ? 'score-pass' : gpa >= 5 ? 'score-avg' : 'score-fail';
+    const studentId = r.Id ?? r._id ?? '';
+    return `<tr>
+      <td class="text-muted small">${idx+1}</td>
+      <td><code class="fw-semibold text-primary">${studentId}</code></td>
+      <td class="fw-semibold">${r.HoTen}</td>
+      <td><span class="badge bg-light text-dark border">${r.LopSinhHoat}</span></td>
+      ${role !== 'giaovien' ? `<td class="text-center">${r.TongTinChi || 0} TC</td>` : ''}
+      <td class="text-center"><span class="${gpaClass} fs-6">${gpa == null ? '?' : gpa.toFixed(2)}</span></td>
+      <td class="text-center">${xepLoaiBadge(r.XepLoai)}</td>
+    </tr>`;
+  }).join('');
 }
 
 let _chartBar = null;

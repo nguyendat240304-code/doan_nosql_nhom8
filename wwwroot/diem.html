@@ -148,20 +148,33 @@
       <div class="card mb-3 border-0 shadow-sm">
         <div class="card-body py-2">
           <div class="row g-2 align-items-center">
-            <div class="col-md-4">
-              <label class="form-label small fw-semibold">Lọc theo Lớp học phần</label>
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold mb-1">Lọc theo Lớp học phần</label>
               <div class="position-relative">
-                <input id="diemLopSearch" class="form-control form-control-sm mb-2" placeholder="Nhập mã hoặc tên lớp..." oninput="filterDiemLopOptions()" />
-                <select id="diemFilterLop" class="form-select" onchange="loadDiemSvList()">
+                <input id="diemLopSearch" class="form-control form-control-sm mb-1" placeholder="Nhập mã hoặc tên lớp..." oninput="filterDiemLopOptions()" />
+                <select id="diemFilterLop" class="form-select form-select-sm" onchange="loadDiemSvList()">
                   <option value="">Tất cả lớp học phần</option>
                 </select>
               </div>
             </div>
-            <div class="col-md-4">
-              <label class="form-label small fw-semibold">Tìm theo tên hoặc MSSV</label>
-              <input id="diemSearchText" class="form-control" placeholder="Nhập tên hoặc MSSV..." oninput="filterDiemTable()" />
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold mb-1"><i class="bi bi-arrow-down-up me-1"></i>Sắp xếp</label>
+              <select id="diemSortSelect" class="form-select form-select-sm" onchange="onDiemSortSelectChange(this.value)">
+                <option value="gpa_desc">🏆 GPA cao nhất → thấp nhất</option>
+                <option value="gpa_asc">📉 GPA thấp nhất → cao nhất</option>
+                <option value="hoten_asc">🔤 Họ tên A → Z</option>
+                <option value="hoten_desc">🔤 Họ tên Z → A</option>
+                <option value="mssv_asc">🆔 MSSV tăng dần</option>
+                <option value="mssv_desc">🆔 MSSV giảm dần</option>
+                <option value="lop_asc">🏫 Lớp A → Z</option>
+                <option value="xeploai_desc">🎖️ Xếp loại cao → thấp</option>
+              </select>
             </div>
-            <div class="col-md-4 text-md-end">
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold mb-1">Tìm theo tên hoặc MSSV</label>
+              <input id="diemSearchText" class="form-control form-control-sm" placeholder="Nhập tên hoặc MSSV..." oninput="filterDiemTable()" />
+            </div>
+            <div class="col-md-3 text-md-end">
               <span id="diemSvCount" class="badge bg-secondary p-2"></span>
             </div>
           </div>
@@ -172,13 +185,23 @@
       <div class="card border-0 shadow-sm mb-4">
         <div class="table-scroll-card"><div class="table-scroll-area">
           <table class="table table-hover align-middle mb-0" id="diemSvTable">
-            <thead class="table-light">
+            <thead class="table-light user-select-none">
               <tr>
-                <th>MSSV</th>
-                <th>Họ tên</th>
-                <th>Lớp</th>
-                <th class="text-center">GPA</th>
-                <th class="text-center">Xếp loại</th>
+                <th role="button" onclick="sortDiemTable('Id')" title="Bấm để sắp xếp theo MSSV">
+                  MSSV <i id="sortIconDiem_Id" class="bi bi-arrow-down-up small text-muted ms-1"></i>
+                </th>
+                <th role="button" onclick="sortDiemTable('HoTen')" title="Bấm để sắp xếp theo Họ tên">
+                  Họ tên <i id="sortIconDiem_HoTen" class="bi bi-arrow-down-up small text-muted ms-1"></i>
+                </th>
+                <th role="button" onclick="sortDiemTable('LopSinhHoat')" title="Bấm để sắp xếp theo Lớp">
+                  Lớp <i id="sortIconDiem_LopSinhHoat" class="bi bi-arrow-down-up small text-muted ms-1"></i>
+                </th>
+                <th role="button" class="text-center" onclick="sortDiemTable('GPA')" title="Bấm để sắp xếp theo GPA">
+                  GPA <i id="sortIconDiem_GPA" class="bi bi-sort-down text-primary ms-1"></i>
+                </th>
+                <th role="button" class="text-center" onclick="sortDiemTable('XepLoai')" title="Bấm để sắp xếp theo Xếp loại">
+                  Xếp loại <i id="sortIconDiem_XepLoai" class="bi bi-arrow-down-up small text-muted ms-1"></i>
+                </th>
                 <th class="text-end">Thao tác</th>
               </tr>
             </thead>
@@ -212,17 +235,25 @@
           </div>
           <div class="table-scroll-area">
             <table class="table table-hover align-middle mb-0">
-              <thead class="table-light">
+              <thead class="table-light user-select-none">
                 <tr>
-                  <th>Mã LHP</th>
-                  <th>Môn học</th>
-                  <th>TC</th>
+                  <th role="button" onclick="sortChiTietDiem('MaLHP')" title="Bấm để sắp xếp theo Mã LHP">
+                    Mã LHP <i id="sortIconCt_MaLHP" class="bi bi-arrow-down-up small text-muted ms-1"></i>
+                  </th>
+                  <th role="button" onclick="sortChiTietDiem('TenMon')" title="Bấm để sắp xếp theo Tên môn">
+                    Môn học <i id="sortIconCt_TenMon" class="bi bi-arrow-down-up small text-muted ms-1"></i>
+                  </th>
+                  <th role="button" class="text-center" onclick="sortChiTietDiem('SoTinChi')" title="Bấm để sắp xếp theo Số TC">
+                    TC <i id="sortIconCt_SoTinChi" class="bi bi-arrow-down-up small text-muted ms-1"></i>
+                  </th>
                   <th>Giảng viên</th>
                   <th class="text-center">Chuyên cần<br/><small class="fw-normal text-muted">(10%)</small></th>
                   <th class="text-center">Giữa kỳ<br/><small class="fw-normal text-muted">(20%)</small></th>
                   <th class="text-center">Thực hành<br/><small class="fw-normal text-muted">(20%)</small></th>
                   <th class="text-center">Cuối kỳ<br/><small class="fw-normal text-muted">(50%)</small></th>
-                  <th class="text-center">Tổng kết</th>
+                  <th role="button" class="text-center" onclick="sortChiTietDiem('DiemTongKet')" title="Bấm để sắp xếp theo Điểm tổng kết">
+                    Tổng kết <i id="sortIconCt_DiemTongKet" class="bi bi-arrow-down-up small text-muted ms-1"></i>
+                  </th>
                   <th class="text-center">Điểm chữ</th>
                   <th class="text-end">Thao tác</th>
                 </tr>

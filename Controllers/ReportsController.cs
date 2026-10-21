@@ -172,8 +172,9 @@ public class ReportsController : ControllerBase
 
         pipeline.Add(new BsonDocument("$sort", new BsonDocument
         {
-            { "LopSinhHoat", 1 },
-            { "GPA", -1 }
+            { "GPA", -1 },
+            { "TongTinChi", -1 },
+            { "HoTen", 1 }
         }));
 
         var result = await _db.SinhViens.Aggregate<BsonDocument>(pipeline).ToListAsync();

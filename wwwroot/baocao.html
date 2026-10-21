@@ -90,6 +90,19 @@
               <option value="">Tất cả lớp</option>
             </select>
           </div>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <label class="form-label small fw-semibold mb-0"><i class="bi bi-arrow-down-up me-1"></i>Sắp xếp:</label>
+            <select id="bcSortSelect" class="form-select form-select-sm" onchange="onBaoCaoSortSelectChange(this.value)" style="min-width:190px">
+              <option value="gpa_desc">🏆 GPA cao nhất → thấp nhất</option>
+              <option value="gpa_asc">📉 GPA thấp nhất → cao nhất</option>
+              <option value="hoten_asc">🔤 Họ tên A → Z</option>
+              <option value="hoten_desc">🔤 Họ tên Z → A</option>
+              <option value="mssv_asc">🆔 MSSV tăng dần</option>
+              <option value="mssv_desc">🆔 MSSV giảm dần</option>
+              <option value="lop_asc">🏫 Lớp A → Z</option>
+              <option value="xeploai_desc">🎖️ Xếp loại cao → thấp</option>
+            </select>
+          </div>
           <span id="bcCountBadge" class="badge bg-primary px-2 py-1">0 sinh viên</span>
           <input id="bcSearch" class="form-control form-control-sm" style="max-width:220px" placeholder="Tìm MSSV, họ tên..." oninput="filterReportRows()" />
         </div>
@@ -98,14 +111,24 @@
     <div class="table-scroll-card"><div class="table-scroll-area">
       <table class="table table-hover align-middle mb-0">
         <thead>
-          <tr>
-            <th>#</th>
-            <th>MSSV</th>
-            <th>Họ tên</th>
-            <th>Lớp</th>
-            <script>if(localStorage.getItem('role')!=='giaovien')document.write('<th class="text-center">Tín chỉ tích lũy</th>')</script>
-            <th class="text-center">GPA (Hệ 10)</th>
-            <th class="text-center">Xếp loại</th>
+          <tr class="table-light user-select-none">
+            <th style="width: 50px;">#</th>
+            <th role="button" onclick="sortBaoCao('Id')" title="Bấm để sắp xếp theo MSSV">
+              MSSV <i id="sortIconBc_Id" class="bi bi-arrow-down-up small text-muted ms-1"></i>
+            </th>
+            <th role="button" onclick="sortBaoCao('HoTen')" title="Bấm để sắp xếp theo Họ tên">
+              Họ tên <i id="sortIconBc_HoTen" class="bi bi-arrow-down-up small text-muted ms-1"></i>
+            </th>
+            <th role="button" onclick="sortBaoCao('LopSinhHoat')" title="Bấm để sắp xếp theo Lớp">
+              Lớp <i id="sortIconBc_LopSinhHoat" class="bi bi-arrow-down-up small text-muted ms-1"></i>
+            </th>
+            <script>if(localStorage.getItem('role')!=='giaovien')document.write('<th role="button" class="text-center" onclick="sortBaoCao(\'TongTinChi\')" title="Bấm để sắp xếp theo Tín chỉ">Tín chỉ tích lũy <i id="sortIconBc_TongTinChi" class="bi bi-arrow-down-up small text-muted ms-1"></i></th>')</script>
+            <th role="button" class="text-center" onclick="sortBaoCao('GPA')" title="Bấm để sắp xếp theo GPA">
+              GPA (Hệ 10) <i id="sortIconBc_GPA" class="bi bi-sort-down text-primary ms-1"></i>
+            </th>
+            <th role="button" class="text-center" onclick="sortBaoCao('XepLoai')" title="Bấm để sắp xếp theo Xếp loại">
+              Xếp loại <i id="sortIconBc_XepLoai" class="bi bi-arrow-down-up small text-muted ms-1"></i>
+            </th>
           </tr>
         </thead>
         <tbody id="bcTable">
