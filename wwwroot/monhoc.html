@@ -266,7 +266,8 @@
 
           <div class="col-md-8">
             <label class="form-label fw-semibold">Tên môn học <span class="text-danger">*</span></label>
-            <input id="mhTenMon" class="form-control" required placeholder="VD: Lập trình Web nâng cao" />
+            <input id="mhTenMon" class="form-control" required placeholder="VD: Lập trình Web nâng cao" oninput="onMhTenMonChange(this.value)" onblur="onMhTenMonChange(this.value)" />
+            <div id="mhTenMonFeedback" class="small mt-1" style="display:none;"></div>
           </div>
 
           <div class="col-md-6">
@@ -301,14 +302,20 @@
               <div class="row g-2 align-items-end">
                 <div class="col-md-4">
                   <label class="small text-muted mb-1 fw-semibold">1. Lọc theo Khoa:</label>
-                  <select id="tqKhoaSelect" class="form-select form-select-sm" onchange="updateTqMonOptions()">
-                    <option value="">-- Tất cả các khoa --</option>
-                  </select>
+                  <div class="input-group input-group-sm">
+                    <input id="tqKhoaInput" class="form-control form-control-sm" list="tqKhoaDatalist" placeholder="--Chọn khoa--" oninput="onTqKhoaInputChange(this.value)" />
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" title="Xem danh sách Khoa">
+                      <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu shadow" id="tqKhoaDropdownMenu" style="max-height: 250px; overflow-y: auto;">
+                    </ul>
+                  </div>
+                  <datalist id="tqKhoaDatalist"></datalist>
                 </div>
                 <div class="col-md-6">
                   <label class="small text-muted mb-1 fw-semibold">2. Chọn môn tiên quyết:</label>
                   <div class="input-group input-group-sm">
-                    <input id="tqMonInput" class="form-control form-control-sm" list="tqMonDatalist" placeholder="Nhập mã/tên môn hoặc bấm ▼ để chọn..." onkeydown="if(event.key==='Enter'){event.preventDefault();addMonTienQuyetFromSelect();}" />
+                    <input id="tqMonInput" class="form-control form-control-sm" list="tqMonDatalist" placeholder="--Chọn mã/tên môn--" onkeydown="if(event.key==='Enter'){event.preventDefault();addMonTienQuyetFromSelect();}" />
                     <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" title="Xem danh sách môn học">
                       <span class="visually-hidden">Toggle Dropdown</span>
                     </button>
@@ -671,22 +678,32 @@
   }
 
   // ==========================================
-  // XỬ LÝ KIỂM TRA TRÙNG MÃ MÔN HỌC & GỢI Ý MÃ
+  // XỬ LÝ KIỂM TRA TRÙNG MÃ & TÊN MÔN HỌC, GỢI Ý MÃ
   // ==========================================
+  function checkFormCanSubmit() {
+    const mhIdInvalid = document.getElementById('mhId')?.classList.contains('is-invalid');
+    const mhTenMonInvalid = document.getElementById('mhTenMon')?.classList.contains('is-invalid');
+    const submitBtn = document.getElementById('btnSubmitMonHoc');
+    if (submitBtn) {
+      submitBtn.disabled = mhIdInvalid || mhTenMonInvalid;
+    }
+  }
+
   function onMhIdChange(val) {
     const isEdit = document.getElementById('mhIsEdit').value;
     if (isEdit) return; // Đang sửa thì mã môn bị khóa
 
     const input = document.getElementById('mhId');
     const fb = document.getElementById('mhIdFeedback');
-    const submitBtn = document.getElementById('btnSubmitMonHoc');
     const cleanId = (val || '').trim().toUpperCase();
 
     if (!cleanId) {
       input.classList.remove('is-invalid', 'is-valid');
-      fb.style.display = 'none';
-      fb.innerHTML = '';
-      if (submitBtn) submitBtn.disabled = false;
+      if (fb) {
+        fb.style.display = 'none';
+        fb.innerHTML = '';
+      }
+      checkFormCanSubmit();
       return;
     }
 
@@ -694,18 +711,62 @@
     if (existing) {
       input.classList.add('is-invalid');
       input.classList.remove('is-valid');
-      fb.className = 'small mt-1 text-danger fw-semibold';
-      fb.style.display = 'block';
-      fb.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-1"></i>Mã môn "${cleanId}" đã tồn tại! (${existing.TenMon} - ${_khoaMap[existing.MaKhoa] || existing.MaKhoa})`;
-      if (submitBtn) submitBtn.disabled = true;
+      if (fb) {
+        fb.className = 'small mt-1 text-danger fw-semibold';
+        fb.style.display = 'block';
+        fb.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-1"></i>Mã môn "${cleanId}" đã tồn tại! (${existing.TenMon} - ${_khoaMap[existing.MaKhoa] || existing.MaKhoa})`;
+      }
     } else {
       input.classList.remove('is-invalid');
       input.classList.add('is-valid');
-      fb.className = 'small mt-1 text-success fw-semibold';
-      fb.style.display = 'block';
-      fb.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i>Mã môn "${cleanId}" hợp lệ, chưa có trong hệ thống.`;
-      if (submitBtn) submitBtn.disabled = false;
+      if (fb) {
+        fb.className = 'small mt-1 text-success fw-semibold';
+        fb.style.display = 'block';
+        fb.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i>Mã môn "${cleanId}" hợp lệ, chưa có trong hệ thống.`;
+      }
     }
+    checkFormCanSubmit();
+  }
+
+  function onMhTenMonChange(val) {
+    const isEdit = document.getElementById('mhIsEdit').value;
+    const input = document.getElementById('mhTenMon');
+    const fb = document.getElementById('mhTenMonFeedback');
+    const cleanName = (val || '').trim().toLowerCase();
+
+    if (!cleanName) {
+      input.classList.remove('is-invalid', 'is-valid');
+      if (fb) {
+        fb.style.display = 'none';
+        fb.innerHTML = '';
+      }
+      checkFormCanSubmit();
+      return;
+    }
+
+    const existing = _monHocAll.find(m => {
+      if (isEdit && m.Id === isEdit) return false;
+      return (m.TenMon || '').trim().toLowerCase() === cleanName;
+    });
+
+    if (existing) {
+      input.classList.add('is-invalid');
+      input.classList.remove('is-valid');
+      if (fb) {
+        fb.className = 'small mt-1 text-danger fw-semibold';
+        fb.style.display = 'block';
+        fb.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-1"></i>Tên môn học "${val.trim()}" đã tồn tại! (Mã môn: ${existing.Id} - ${_khoaMap[existing.MaKhoa] || existing.MaKhoa})`;
+      }
+    } else {
+      input.classList.remove('is-invalid');
+      input.classList.add('is-valid');
+      if (fb) {
+        fb.className = 'small mt-1 text-success fw-semibold';
+        fb.style.display = 'block';
+        fb.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i>Tên môn học hợp lệ, chưa có trong hệ thống.`;
+      }
+    }
+    checkFormCanSubmit();
   }
 
   function generateNextMhId() {
@@ -731,25 +792,54 @@
   // XỬ LÝ MÔN HỌC TIÊN QUYẾT: CHỌN KHOA -> DROPDOWN
   // ==========================================
   function initTqKhoaOptions() {
-    const sel = document.getElementById('tqKhoaSelect');
-    if (!sel) return;
-    let html = '<option value="">-- Tất cả các khoa --</option>';
+    const datalist = document.getElementById('tqKhoaDatalist');
+    const dropdownMenu = document.getElementById('tqKhoaDropdownMenu');
+    if (!datalist || !dropdownMenu) return;
+
+    let datalistHtml = '<option value="-- Tất cả các khoa --"></option>';
+    let menuHtml = '<li><a class="dropdown-item small py-1" href="javascript:void(0)" onclick="selectTqKhoaFromDropdown(\'\')">-- Tất cả các khoa --</a></li><li><hr class="dropdown-divider my-1"></li>';
+
     Object.keys(_khoaMap).forEach(kId => {
-      html += `<option value="${kId}">${_khoaMap[kId]} (${kId})</option>`;
+      datalistHtml += `<option value="${_khoaMap[kId]} (${kId})"></option>`;
+      menuHtml += `<li><a class="dropdown-item small py-1" href="javascript:void(0)" onclick="selectTqKhoaFromDropdown('${kId}')"><strong class="text-primary">${kId}</strong> - ${_khoaMap[kId]}</a></li>`;
     });
-    sel.innerHTML = html;
+
+    datalist.innerHTML = datalistHtml;
+    dropdownMenu.innerHTML = menuHtml;
+  }
+
+  function getTqSelectedKhoaId() {
+    const val = (document.getElementById('tqKhoaInput')?.value || '').trim();
+    if (!val || val.includes('Tất cả')) return '';
+    if (_khoaMap[val.toUpperCase()]) return val.toUpperCase();
+    const match = val.match(/\(([^)]+)\)$/);
+    if (match && _khoaMap[match[1].toUpperCase()]) return match[1].toUpperCase();
+    const entry = Object.entries(_khoaMap).find(([id, name]) => 
+      name.toLowerCase() === val.toLowerCase() || 
+      id.toLowerCase() === val.toLowerCase() ||
+      name.toLowerCase().includes(val.toLowerCase())
+    );
+    return entry ? entry[0] : '';
+  }
+
+  function selectTqKhoaFromDropdown(kId) {
+    const input = document.getElementById('tqKhoaInput');
+    if (input) {
+      input.value = kId && _khoaMap[kId] ? `${_khoaMap[kId]} (${kId})` : '';
+    }
+    updateTqMonOptions();
+  }
+
+  function onTqKhoaInputChange(val) {
+    updateTqMonOptions();
   }
 
   function onMhMaKhoaModalChange(maKhoa) {
-    const tqKhoa = document.getElementById('tqKhoaSelect');
-    if (tqKhoa && maKhoa) {
-      tqKhoa.value = maKhoa;
-      updateTqMonOptions();
-    }
+    selectTqKhoaFromDropdown(maKhoa);
   }
 
   function updateTqMonOptions() {
-    const selKhoa = document.getElementById('tqKhoaSelect')?.value || '';
+    const selKhoa = getTqSelectedKhoaId();
     const datalist = document.getElementById('tqMonDatalist');
     const dropdownMenu = document.getElementById('tqMonDropdownMenu');
     const currentId = (document.getElementById('mhId')?.value || '').trim().toUpperCase();
@@ -941,9 +1031,20 @@
     idInput.value = '';
     idInput.classList.remove('is-invalid', 'is-valid');
     document.getElementById('btnGenMhId').style.display = 'inline-block';
-    document.getElementById('mhIdFeedback').style.display = 'none';
+    const mhIdFb = document.getElementById('mhIdFeedback');
+    if (mhIdFb) { mhIdFb.style.display = 'none'; mhIdFb.innerHTML = ''; }
 
-    document.getElementById('mhTenMon').value = '';
+    const tenMonInput = document.getElementById('mhTenMon');
+    if (tenMonInput) {
+      tenMonInput.value = '';
+      tenMonInput.classList.remove('is-invalid', 'is-valid');
+    }
+    const tenMonFb = document.getElementById('mhTenMonFeedback');
+    if (tenMonFb) {
+      tenMonFb.style.display = 'none';
+      tenMonFb.innerHTML = '';
+    }
+
     document.getElementById('mhMaKhoa').value = '';
     document.getElementById('mhSoTinChi').value = '3';
     document.getElementById('mhLyThuyet').value = '30';
@@ -952,6 +1053,10 @@
     _selectedTqList = [];
     renderTqTags();
     initTqKhoaOptions();
+    const tqKhoaInput = document.getElementById('tqKhoaInput');
+    if (tqKhoaInput) tqKhoaInput.value = '';
+    const tqMonInput = document.getElementById('tqMonInput');
+    if (tqMonInput) tqMonInput.value = '';
     updateTqMonOptions();
 
     document.getElementById('cloTableBody').innerHTML = '';
@@ -975,9 +1080,20 @@
       idInput.disabled = true;
       idInput.classList.remove('is-invalid', 'is-valid');
       document.getElementById('btnGenMhId').style.display = 'none';
-      document.getElementById('mhIdFeedback').style.display = 'none';
+      const mhIdFb = document.getElementById('mhIdFeedback');
+      if (mhIdFb) { mhIdFb.style.display = 'none'; mhIdFb.innerHTML = ''; }
 
-      document.getElementById('mhTenMon').value = m.TenMon || '';
+      const tenMonInput = document.getElementById('mhTenMon');
+      if (tenMonInput) {
+        tenMonInput.value = m.TenMon || '';
+        tenMonInput.classList.remove('is-invalid', 'is-valid');
+      }
+      const tenMonFb = document.getElementById('mhTenMonFeedback');
+      if (tenMonFb) {
+        tenMonFb.style.display = 'none';
+        tenMonFb.innerHTML = '';
+      }
+
       document.getElementById('mhMaKhoa').value = m.MaKhoa || '';
       document.getElementById('mhSoTinChi').value = m.SoTinChi || 3;
       document.getElementById('mhLyThuyet').value = m.LyThuyet ?? 0;
@@ -986,8 +1102,10 @@
       // Môn tiên quyết
       _selectedTqList = (m.MonTienQuyet || []).map(x => x.trim().toUpperCase()).filter(Boolean);
       renderTqTags();
-      const tqKhoa = document.getElementById('tqKhoaSelect');
-      if (tqKhoa && m.MaKhoa) tqKhoa.value = m.MaKhoa;
+      initTqKhoaOptions();
+      selectTqKhoaFromDropdown(m.MaKhoa || '');
+      const tqMonInput = document.getElementById('tqMonInput');
+      if (tqMonInput) tqMonInput.value = '';
       updateTqMonOptions();
 
       // CLO
@@ -1042,6 +1160,18 @@
 
     if (!tenMon) {
       showModalError('modalMonHoc', 'Tên môn học không được để trống.');
+      document.getElementById('mhTenMon').focus();
+      return;
+    }
+
+    // Kiểm tra trùng tên môn học (cả khi thêm mới lẫn sửa)
+    const existingTenMon = _monHocAll.find(m => {
+      if (isEdit && m.Id === isEdit) return false;
+      return (m.TenMon || '').trim().toLowerCase() === tenMon.toLowerCase();
+    });
+    if (existingTenMon) {
+      showModalError('modalMonHoc', `Tên môn học "${tenMon}" đã tồn tại trong hệ thống (Mã môn: ${existingTenMon.Id}). Vui lòng nhập tên khác.`);
+      document.getElementById('mhTenMon').classList.add('is-invalid');
       document.getElementById('mhTenMon').focus();
       return;
     }
