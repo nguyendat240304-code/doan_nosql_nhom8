@@ -48,11 +48,6 @@
         <span id="badgeTotalClos" class="badge bg-secondary ms-1">0</span>
       </button>
     </li>
-    <li class="nav-item">
-      <button class="nav-link fw-semibold" id="tab-huit-btn" data-bs-toggle="pill" data-bs-target="#tab-huit" type="button" role="tab" onclick="onSwitchTab('huit')">
-        <i class="bi bi-mortarboard-fill me-1"></i>Chuẩn CLO HUIT mẫu
-      </button>
-    </li>
   </ul>
 
   <div class="tab-content" id="mhTabsContent">
@@ -168,27 +163,27 @@
         </div>
       </div>
 
-      <!-- Filter CLO -->
+      <!-- Filter CLO & Sắp xếp -->
       <div class="card mb-4 border-0 shadow-sm">
         <div class="card-body py-3">
           <div class="row g-2 align-items-end">
-            <div class="col-md-4">
-              <label class="form-label small fw-semibold text-primary"><i class="bi bi-search me-1"></i>Tìm kiếm chuẩn đầu ra</label>
+            <div class="col-lg-3 col-md-5">
+              <label class="form-label small fw-semibold text-primary"><i class="bi bi-search me-1"></i>Tìm kiếm</label>
               <input id="cloSearchText" class="form-control form-control-sm" placeholder="Tìm theo mã CLO, mô tả..." oninput="filterCloTable()" />
             </div>
-            <div class="col-md-3">
+            <div class="col-lg-2 col-md-3 col-sm-6">
               <label class="form-label small fw-semibold text-primary"><i class="bi bi-building me-1"></i>Khoa</label>
               <select id="cloFilterKhoa" class="form-select form-select-sm" onchange="filterCloTable()">
-                <option value="">Tất cả các khoa</option>
+                <option value="">Tất cả khoa</option>
               </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-lg-2 col-md-4 col-sm-6">
               <label class="form-label small fw-semibold text-primary"><i class="bi bi-book me-1"></i>Môn học</label>
               <select id="cloFilterMon" class="form-select form-select-sm" onchange="filterCloTable()">
-                <option value="">Tất cả môn học</option>
+                <option value="">Tất cả môn</option>
               </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-lg-2 col-md-6 col-sm-6">
               <label class="form-label small fw-semibold text-primary"><i class="bi bi-layers me-1"></i>Mức độ Bloom</label>
               <select id="cloFilterMucDo" class="form-select form-select-sm" onchange="filterCloTable()">
                 <option value="">Tất cả mức độ</option>
@@ -198,6 +193,18 @@
                 <option value="Phân tích">Phân tích (Bậc 4)</option>
                 <option value="Đánh giá">Đánh giá (Bậc 5)</option>
                 <option value="Sáng tạo">Sáng tạo (Bậc 6)</option>
+              </select>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-6">
+              <label class="form-label small fw-semibold text-primary"><i class="bi bi-sort-down me-1"></i>Sắp xếp</label>
+              <select id="cloSortSelect" class="form-select form-select-sm" onchange="filterCloTable()">
+                <option value="clo_asc">Mã CLO tăng dần (CLO1 → CLO4)</option>
+                <option value="clo_desc">Mã CLO giảm dần (CLO4 → CLO1)</option>
+                <option value="mon_asc">Tên môn học A → Z</option>
+                <option value="mon_desc">Tên môn học Z → A</option>
+                <option value="bloom_desc">Mức độ Bloom cao → thấp</option>
+                <option value="bloom_asc">Mức độ Bloom thấp → cao</option>
+                <option value="khoa_asc">Khoa A → Z</option>
               </select>
             </div>
           </div>
@@ -227,21 +234,6 @@
             </tbody>
           </table>
         </div>
-      </div>
-    </div>
-
-    <!-- TAB 3: NGÂN HÀNG CLO HUIT MẪU -->
-    <div class="tab-pane fade" id="tab-huit" role="tabpanel">
-      <div class="alert alert-info border-0 shadow-sm d-flex align-items-center mb-4">
-        <i class="bi bi-mortarboard-fill fs-2 text-primary me-3"></i>
-        <div>
-          <h6 class="fw-bold mb-1">Khung Chuẩn Đầu Ra Học Phần (CLO) - Tiêu chuẩn Trường Đại học Công Thương TP.HCM (HUIT)</h6>
-          <p class="mb-0 small">Được thiết kế dựa trên thang phân loại Bloom (6 bậc nhận thức) kết hợp nhóm năng lực cốt lõi: <strong>Kiến thức chuyên môn</strong>, <strong>Kỹ năng kỹ thuật &amp; công cụ</strong>, <strong>Kỹ năng mềm/làm việc nhóm</strong> và <strong>Đạo đức, tự chủ &amp; trách nhiệm</strong>.</p>
-        </div>
-      </div>
-
-      <div class="row g-4" id="huitCloBankCards">
-        <!-- Rendered by JS -->
       </div>
     </div>
   </div>
@@ -438,8 +430,7 @@
 <script src="/js/layout.js?v=20261021-clo-huit"></script>
 <script src="/js/app.js"></script>
 <script>
-  const _initTab = new URLSearchParams(window.location.search).get('tab');
-  renderLayout(_initTab === 'clo' ? 'chuandaura' : 'monhoc');
+  renderLayout('monhoc');
 
   const role = localStorage.getItem('role');
   if (role !== 'admin') {
@@ -556,7 +547,6 @@
       _monHocAll = monHocs || [];
       renderMonHocTable(_monHocAll);
       renderCloManagementTab();
-      renderHuitBankCards();
 
       // Kiểm tra URL query param ?tab=clo
       const urlParams = new URLSearchParams(window.location.search);
@@ -1177,6 +1167,40 @@
       return matchQ && matchKhoa && matchMon && matchMucDo;
     });
 
+    const sortVal = document.getElementById('cloSortSelect')?.value || 'clo_asc';
+    function getBloomRank(mucDo) {
+      if (!mucDo) return 0;
+      const s = mucDo.toLowerCase();
+      if (s.includes('sáng tạo') || s.includes('bậc 6') || s.includes('6')) return 6;
+      if (s.includes('đánh giá') || s.includes('bậc 5') || s.includes('5')) return 5;
+      if (s.includes('vận dụng cao') || s.includes('phân tích') || s.includes('bậc 4') || s.includes('4')) return 4;
+      if (s.includes('vận dụng') || s.includes('thấu hiểu') || s.includes('bậc 3') || s.includes('3')) return 3;
+      if (s.includes('hiểu') || s.includes('bậc 2') || s.includes('2')) return 2;
+      if (s.includes('nhớ') || s.includes('bậc 1') || s.includes('1')) return 1;
+      return 0;
+    }
+
+    filtered.sort((a, b) => {
+      switch (sortVal) {
+        case 'clo_asc':
+          return (a.MaCLO || '').localeCompare(b.MaCLO || '', undefined, { numeric: true });
+        case 'clo_desc':
+          return (b.MaCLO || '').localeCompare(a.MaCLO || '', undefined, { numeric: true });
+        case 'mon_asc':
+          return (a.TenMon || '').localeCompare(b.TenMon || '', 'vi');
+        case 'mon_desc':
+          return (b.TenMon || '').localeCompare(a.TenMon || '', 'vi');
+        case 'bloom_desc':
+          return (getBloomRank(b.MucDo) - getBloomRank(a.MucDo)) || (a.MaCLO || '').localeCompare(b.MaCLO || '', undefined, { numeric: true });
+        case 'bloom_asc':
+          return (getBloomRank(a.MucDo) - getBloomRank(b.MucDo)) || (a.MaCLO || '').localeCompare(b.MaCLO || '', undefined, { numeric: true });
+        case 'khoa_asc':
+          return (_khoaMap[a.MaKhoa] || a.MaKhoa || '').localeCompare(_khoaMap[b.MaKhoa] || b.MaKhoa || '', 'vi');
+        default:
+          return (a.MaCLO || '').localeCompare(b.MaCLO || '', undefined, { numeric: true });
+      }
+    });
+
     const countBadge = document.getElementById('cloFilteredCount');
     if (countBadge) countBadge.textContent = `${filtered.length} chuẩn đầu ra`;
 
@@ -1210,60 +1234,6 @@
         </tr>
       `;
     }).join('');
-  }
-
-  // ==========================================
-  // TAB NGÂN HÀNG CLO HUIT MẪU
-  // ==========================================
-  function renderHuitBankCards() {
-    const container = document.getElementById('huitCloBankCards');
-    if (!container) return;
-
-    container.innerHTML = HUIT_CLO_CATEGORIES.map(cat => {
-      const itemsHtml = cat.items.map(item => `
-        <li class="list-group-item d-flex justify-content-between align-items-start py-2">
-          <div class="ms-2 me-auto">
-            <div class="d-flex align-items-center gap-2 mb-1">
-              <span class="badge ${getBloomBadgeClass(item.level)}">${item.code}</span>
-              <span class="badge bg-light text-dark border small">${item.level}</span>
-            </div>
-            <div class="small text-secondary">${item.desc}</div>
-          </div>
-          <button class="btn btn-sm btn-outline-secondary ms-2 text-nowrap" onclick="copyCloText('${item.desc.replace(/'/g, "\\'")}')" title="Sao chép nội dung chuẩn này">
-            <i class="bi bi-clipboard"></i>
-          </button>
-        </li>
-      `).join('');
-
-      return `
-        <div class="col-md-6">
-          <div class="card h-100 border-0 shadow-sm">
-            <div class="card-header bg-white py-3 border-bottom">
-              <div class="d-flex align-items-center">
-                <div class="p-2 bg-${cat.color}-subtle text-${cat.color} rounded me-2">
-                  <i class="bi ${cat.icon} fs-5"></i>
-                </div>
-                <div>
-                  <h6 class="mb-0 fw-bold">${cat.title}</h6>
-                  <small class="text-muted">${cat.description}</small>
-                </div>
-              </div>
-            </div>
-            <ul class="list-group list-group-flush">
-              ${itemsHtml}
-            </ul>
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  function copyCloText(text) {
-    navigator.clipboard.writeText(text).then(() => {
-      toast('Đã sao chép nội dung CLO vào bộ nhớ tạm!', 'success');
-    }).catch(() => {
-      toast('Không thể sao chép tự động, vui lòng chọn và copy thủ công.', 'warning');
-    });
   }
 
   // ==========================================

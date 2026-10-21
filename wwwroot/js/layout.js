@@ -56,7 +56,6 @@ function renderLayout(activePage) {
       { id: 'taikhoan',     href: '/taikhoan.html',   icon: 'bi-person-badge-fill',  label: 'Quản lý Tài khoản' },
       { id: 'sinhvien',     href: '/sinhvien.html',   icon: 'bi-people',             label: 'Quản lý Sinh viên' },
       { id: 'monhoc',       href: '/monhoc.html',     icon: 'bi-book',               label: 'Quản lý Môn học' },
-      { id: 'chuandaura',   href: '/monhoc.html?tab=clo', icon: 'bi-award-fill',     label: 'Chuẩn đầu ra (CLO)' },
       { id: 'lophocphan',   href: '/lophocphan.html', icon: 'bi-journal-bookmark',   label: 'Quản lý Lớp học phần' },
       { id: 'diem',         href: '/diem.html',       icon: 'bi-pencil-square',      label: 'Quản lý Điểm' },
       { id: 'baocao',       href: '/baocao.html',     icon: 'bi-graph-up',           label: 'Báo cáo học lực' },
